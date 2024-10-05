@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}D&D Home{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Welcome to the D&D Web App</h1>
+<div class="d-flex justify-content-center">
+    <div class="btn-group-vertical">
+        {% if current_user.is_authenticated %}
+            <a href="/character_creation" class="btn btn-primary mb-3">Create a Character</a>
+            <a href="/characters" class="btn btn-warning mb-3">View My Characters</a>
+            <a href="/campaigns" class="btn btn-secondary mb-3">Create a Campaign</a>
+            <a href="/participating_campaigns" class="btn btn-info mb-3">View Participating Campaigns</a>
+            <a href="/battle_map" class="btn btn-success">Battle Map</a>
+        {% else %}
+            <a href="/login" class="btn btn-primary mb-3">Login</a>
+            <a href="/register" class="btn btn-secondary mb-3">Register</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

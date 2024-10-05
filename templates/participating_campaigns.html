@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Participating Campaigns{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Participating Campaigns</h1>
+<div id="campaigns-list" class="bg-secondary p-4 rounded">
+    {% if campaigns %}
+        {% for campaign in campaigns %}
+            <div class="mb-3 p-3 bg-dark text-light rounded">
+                <h4>{{ campaign.name }}</h4>
+                <p>Description: {{ campaign.description }}</p>
+                <a href="/join_campaign/{{ campaign.id }}" class="btn btn-primary">Join Campaign</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No campaigns found.</p>
+    {% endif %}
+</div>
+{% endblock %}

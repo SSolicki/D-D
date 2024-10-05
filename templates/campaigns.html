@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Create a Campaign</h1>
+<form id="campaign-form" class="bg-secondary p-4 rounded">
+    <div class="mb-3">
+        <label for="name" class="form-label">Campaign Name:</label>
+        <input type="text" id="name" name="name" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="description" class="form-label">Description:</label>
+        <textarea id="description" name="description" class="form-control" required></textarea>
+    </div>
+
+    <button type="button" class="btn btn-primary w-100" onclick="createCampaign()">Create Campaign</button>
+</form>
+
+<script>
+function createCampaign() {
+    const form = document.getElementById('campaign-form');
+    const formData = new FormData(form);
+
+    fetch('/create_campaign', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.message);
+        if (data.campaign) {
+            console.log(data.campaign);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating campaign.');
+    });
+}
+</script>
+{% endblock %}

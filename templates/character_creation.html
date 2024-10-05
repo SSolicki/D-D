@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Character Creation{% endblock %}
+
+{% block content %}
+<h1 class="text-center mb-4">Create Your Character</h1>
+<form id="character-form" class="bg-secondary p-4 rounded">
+    <div class="mb-3">
+        <label for="name" class="form-label">Character Name:</label>
+        <input type="text" id="name" name="name" class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="class" class="form-label">Class:</label>
+        <select id="class" name="class" class="form-select">
+            <option value="fighter">Fighter</option>
+            <option value="wizard">Wizard</option>
+            <option value="rogue">Rogue</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="race" class="form-label">Race:</label>
+        <select id="race" name="race" class="form-select">
+            <option value="human">Human</option>
+            <option value="elf">Elf</option>
+            <option value="dwarf">Dwarf</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="strength" class="form-label">Strength:</label>
+        <input type="number" id="strength" name="strength" class="form-control" min="1" max="20" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="dexterity" class="form-label">Dexterity:</label>
+        <input type="number" id="dexterity" name="dexterity" class="form-control" min="1" max="20" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="intelligence" class="form-label">Intelligence:</label>
+        <input type="number" id="intelligence" name="intelligence" class="form-control" min="1" max="20" required>
+    </div>
+
+    <button type="button" class="btn btn-primary w-100" onclick="saveCharacter()">Save Character</button>
+</form>
+
+<script>
+function saveCharacter() {
+    const form = document.getElementById('character-form');
+    const formData = new FormData(form);
+
+    fetch('/save_character', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        alert(data.message);
+        if (data.character) {
+            console.log(data.character);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error saving character.');
+    });
+}
+</script>
+{% endblock %}

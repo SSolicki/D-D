@@ -1,0 +1,58 @@
+# Python specific
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+
+# Environment variables
+.env
+*.env
+
+# Database files
+*.sqlite3
+*.db
+
+# Flask and Python related
+instance/
+*.log
+*.pot
+*.pyc
+*.pyo
+*.pyd
+
+# Test and coverage reports
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Node.js dependencies (for frontend assets)
+node_modules/
+
+# Distribution / Packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Docker
+*.dockerfile
+.dockerignore
+
+# Azure specific
+.terraform/
+*.tfstate
+*.tfstate.backup
