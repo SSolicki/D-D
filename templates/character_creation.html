@@ -3,50 +3,173 @@
 {% block title %}Character Creation{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">Create Your Character</h1>
-<form id="character-form" class="bg-secondary p-4 rounded">
-    <div class="mb-3">
-        <label for="name" class="form-label">Character Name:</label>
-        <input type="text" id="name" name="name" class="form-control" required>
-    </div>
+<div class="container">
+    <h1 class="text-center mb-4">Create Your Character</h1>
+    
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <form id="character-form" class="card bg-secondary">
+                <div class="card-header">
+                    <h3 class="card-title mb-0">Character Details</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Basic Info -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Character Name</label>
+                                <input type="text" id="name" name="name" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="level" class="form-label">Starting Level</label>
+                                <input type="number" id="level" name="level" class="form-control" value="1" min="1" max="20" required>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="mb-3">
-        <label for="class" class="form-label">Class:</label>
-        <select id="class" name="class" class="form-select">
-            <option value="fighter">Fighter</option>
-            <option value="wizard">Wizard</option>
-            <option value="rogue">Rogue</option>
-        </select>
-    </div>
+                    <!-- Class and Race -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="class" class="form-label">Class</label>
+                                <select id="class" name="class" class="form-select" required>
+                                    <option value="">Choose a class...</option>
+                                    <option value="barbarian">Barbarian</option>
+                                    <option value="bard">Bard</option>
+                                    <option value="cleric">Cleric</option>
+                                    <option value="druid">Druid</option>
+                                    <option value="fighter">Fighter</option>
+                                    <option value="monk">Monk</option>
+                                    <option value="paladin">Paladin</option>
+                                    <option value="ranger">Ranger</option>
+                                    <option value="rogue">Rogue</option>
+                                    <option value="sorcerer">Sorcerer</option>
+                                    <option value="warlock">Warlock</option>
+                                    <option value="wizard">Wizard</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="race" class="form-label">Race</label>
+                                <select id="race" name="race" class="form-select" required>
+                                    <option value="">Choose a race...</option>
+                                    <option value="dragonborn">Dragonborn</option>
+                                    <option value="dwarf">Dwarf</option>
+                                    <option value="elf">Elf</option>
+                                    <option value="gnome">Gnome</option>
+                                    <option value="half-elf">Half-Elf</option>
+                                    <option value="halfling">Halfling</option>
+                                    <option value="half-orc">Half-Orc</option>
+                                    <option value="human">Human</option>
+                                    <option value="tiefling">Tiefling</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="mb-3">
-        <label for="race" class="form-label">Race:</label>
-        <select id="race" name="race" class="form-select">
-            <option value="human">Human</option>
-            <option value="elf">Elf</option>
-            <option value="dwarf">Dwarf</option>
-        </select>
-    </div>
+                    <!-- Ability Scores -->
+                    <h4 class="mb-3">Ability Scores</h4>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="strength" class="form-label">Strength</label>
+                                <div class="input-group">
+                                    <input type="number" id="strength" name="strength" class="form-control" min="3" max="20" required>
+                                    <button type="button" class="btn btn-outline-light" onclick="rollAbilityScore('strength')">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="dexterity" class="form-label">Dexterity</label>
+                                <div class="input-group">
+                                    <input type="number" id="dexterity" name="dexterity" class="form-control" min="3" max="20" required>
+                                    <button type="button" class="btn btn-outline-light" onclick="rollAbilityScore('dexterity')">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="constitution" class="form-label">Constitution</label>
+                                <div class="input-group">
+                                    <input type="number" id="constitution" name="constitution" class="form-control" min="3" max="20" required>
+                                    <button type="button" class="btn btn-outline-light" onclick="rollAbilityScore('constitution')">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="intelligence" class="form-label">Intelligence</label>
+                                <div class="input-group">
+                                    <input type="number" id="intelligence" name="intelligence" class="form-control" min="3" max="20" required>
+                                    <button type="button" class="btn btn-outline-light" onclick="rollAbilityScore('intelligence')">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="wisdom" class="form-label">Wisdom</label>
+                                <div class="input-group">
+                                    <input type="number" id="wisdom" name="wisdom" class="form-control" min="3" max="20" required>
+                                    <button type="button" class="btn btn-outline-light" onclick="rollAbilityScore('wisdom')">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="charisma" class="form-label">Charisma</label>
+                                <div class="input-group">
+                                    <input type="number" id="charisma" name="charisma" class="form-control" min="3" max="20" required>
+                                    <button type="button" class="btn btn-outline-light" onclick="rollAbilityScore('charisma')">
+                                        <i class="fas fa-dice"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    <div class="mb-3">
-        <label for="strength" class="form-label">Strength:</label>
-        <input type="number" id="strength" name="strength" class="form-control" min="1" max="20" required>
-    </div>
+                    <!-- Background -->
+                    <div class="mb-4">
+                        <label for="background" class="form-label">Background Story</label>
+                        <textarea id="background" name="background" class="form-control" rows="3" placeholder="Tell us about your character's background..."></textarea>
+                    </div>
 
-    <div class="mb-3">
-        <label for="dexterity" class="form-label">Dexterity:</label>
-        <input type="number" id="dexterity" name="dexterity" class="form-control" min="1" max="20" required>
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-primary" onclick="saveCharacter()">
+                            <i class="fas fa-save"></i> Create Character
+                        </button>
+                        <a href="{{ url_for('view_characters') }}" class="btn btn-outline-light">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <div class="mb-3">
-        <label for="intelligence" class="form-label">Intelligence:</label>
-        <input type="number" id="intelligence" name="intelligence" class="form-control" min="1" max="20" required>
-    </div>
-
-    <button type="button" class="btn btn-primary w-100" onclick="saveCharacter()">Save Character</button>
-</form>
+</div>
 
 <script>
+function rollAbilityScore(ability) {
+    // Roll 4d6, drop lowest
+    let rolls = Array.from({length: 4}, () => Math.floor(Math.random() * 6) + 1);
+    rolls.sort((a, b) => b - a);
+    let total = rolls.slice(0, 3).reduce((a, b) => a + b, 0);
+    document.getElementById(ability).value = total;
+}
+
 function saveCharacter() {
     const form = document.getElementById('character-form');
     const formData = new FormData(form);
@@ -55,21 +178,17 @@ function saveCharacter() {
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        alert(data.message);
         if (data.character) {
-            console.log(data.character);
+            window.location.href = '/characters';
+        } else {
+            alert('Error saving character: ' + (data.error || 'Unknown error'));
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error saving character.');
+        alert('Error saving character');
     });
 }
 </script>

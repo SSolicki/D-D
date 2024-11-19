@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}{{ map.name }} - Battle Map{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Map Area -->
+        <div class="col-md-9">
+            <div class="card bg-secondary mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">{{ map.name }}</h2>
+                    <div>
+                        <button class="btn btn-outline-light" onclick="toggleGrid()">
+                            <i class="fas fa-th"></i> Toggle Grid
+                        </button>
+                        <button class="btn btn-outline-light" onclick="addToken()">
+                            <i class="fas fa-plus"></i> Add Token
+                        </button>
+                        <button class="btn btn-outline-light" onclick="clearMap()">
+                            <i class="fas fa-trash"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div id="battle-map-container" style="height: calc(100vh - 200px); background: {{ map.background_color }};">
+                        <div id="battle-map" class="{% if map.show_grid %}grid-enabled{% endif %}"
+                             data-width="{{ map.grid_width }}" 
+                             data-height="{{ map.grid_height }}">
+                            <!-- Tokens will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <!-- Map Controls -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Map Controls</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Background Color</label>
+                        <input type="color" id="background_color" class="form-control form-control-color" 
+                               value="{{ map.background_color }}" onchange="updateBackground(this.value)">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Grid Size</label>
+                        <div class="input-group">
+                            <input type="number" id="grid_size" class="form-control" value="50" min="20" max="100"
+                                   onchange="updateGridSize(this.value)">
+                            <span class="input-group-text">px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Token List -->
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h3 class="mb-0">Tokens</h3>
+                </div>
+                <div class="card-body">
+                    <div id="token-list" class="list-group">
+                        <!-- Tokens will be listed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let tokens = [];
+
+function toggleGrid() {
+    const map = document.getElementById('battle-map');
+    map.classList.toggle('grid-enabled');
+}
+
+function addToken() {
+    const tokenName = prompt('Enter token name:');
+    if (tokenName) {
+        const token = {
+            id: Date.now(),
+            name: tokenName,
+            x: 0,
+            y: 0
+        };
+        tokens.push(token);
+        createTokenElement(token);
+        updateTokenList();
+    }
+}
+
+function createTokenElement(token) {
+    const element = document.createElement('div');
+    element.className = 'battle-token';
+    element.id = `token-${token.id}`;
+    element.textContent = token.name[0].toUpperCase();
+    element.title = token.name;
+    element.draggable = true;
+    element.style.left = `${token.x}px`;
+    element.style.top = `${token.y}px`;
+    
+    element.addEventListener('dragstart', handleDragStart);
+    document.getElementById('battle-map').appendChild(element);
+}
+
+function updateTokenList() {
+    const list = document.getElementById('token-list');
+    list.innerHTML = '';
+    tokens.forEach(token => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <span>${token.name}</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeToken(${token.id})">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function removeToken(tokenId) {
+    const index = tokens.findIndex(t => t.id === tokenId);
+    if (index !== -1) {
+        tokens.splice(index, 1);
+        const element = document.getElementById(`token-${tokenId}`);
+        if (element) element.remove();
+        updateTokenList();
+    }
+}
+
+function clearMap() {
+    if (confirm('Are you sure you want to clear all tokens?')) {
+        tokens = [];
+        document.getElementById('battle-map').innerHTML = '';
+        updateTokenList();
+    }
+}
+
+function updateBackground(color) {
+    document.getElementById('battle-map-container').style.background = color;
+}
+
+function updateGridSize(size) {
+    const map = document.getElementById('battle-map');
+    if (map.classList.contains('grid-enabled')) {
+        map.style.backgroundSize = `${size}px ${size}px`;
+    }
+}
+
+// Drag and Drop functionality
+function handleDragStart(e) {
+    const token = e.target;
+    e.dataTransfer.setData('text/plain', token.id);
+}
+
+document.getElementById('battle-map').addEventListener('dragover', function(e) {
+    e.preventDefault();
+});
+
+document.getElementById('battle-map').addEventListener('drop', function(e) {
+    e.preventDefault();
+    const tokenId = e.dataTransfer.getData('text/plain');
+    const token = document.getElementById(tokenId);
+    if (token) {
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left - 20; // 20 is half token width
+        const y = e.clientY - rect.top - 20;  // 20 is half token height
+        token.style.left = `${x}px`;
+        token.style.top = `${y}px`;
+        
+        // Update token position in array
+        const id = parseInt(tokenId.split('-')[1]);
+        const tokenData = tokens.find(t => t.id === id);
+        if (tokenData) {
+            tokenData.x = x;
+            tokenData.y = y;
+        }
+    }
+});
+</script>
+
+<style>
+#battle-map-container {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+
+#battle-map {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#battle-map.grid-enabled {
+    background-image: linear-gradient(#444 1px, transparent 1px),
+                      linear-gradient(90deg, #444 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+.battle-token {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #666;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    cursor: move;
+    user-select: none;
+    font-weight: bold;
+}
+
+.token-list {
+    max-height: calc(100vh - 500px);
+    overflow-y: auto;
+}
+</style>
+{% endblock %}

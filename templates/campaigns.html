@@ -1,27 +1,133 @@
 {% extends "base.html" %}
 
-{% block title %}Campaigns{% endblock %}
+{% block title %}Create Campaign{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">Create a Campaign</h1>
-<form id="campaign-form" class="bg-secondary p-4 rounded">
-    <div class="mb-3">
-        <label for="name" class="form-label">Campaign Name:</label>
-        <input type="text" id="name" name="name" class="form-control" required>
-    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <!-- Campaign Creation Form -->
+        <div class="col-md-8">
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">
+                    <h2 class="mb-0">Create New Campaign</h2>
+                </div>
+                <div class="card-body">
+                    <form id="campaign-form">
+                        <!-- Campaign Details -->
+                        <h4 class="mb-3">Campaign Details</h4>
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Campaign Name</label>
+                            <input type="text" id="name" name="name" class="form-control" required>
+                        </div>
 
-    <div class="mb-3">
-        <label for="description" class="form-label">Description:</label>
-        <textarea id="description" name="description" class="form-control" required></textarea>
-    </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            <textarea id="description" name="description" class="form-control" rows="3" required></textarea>
+                        </div>
 
-    <button type="button" class="btn btn-primary w-100" onclick="createCampaign()">Create Campaign</button>
-</form>
+                        <div class="mb-3">
+                            <label for="setting" class="form-label">Campaign Setting</label>
+                            <input type="text" id="setting" name="setting" class="form-control" 
+                                   placeholder="e.g., Forgotten Realms, Eberron, Custom">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="level_range" class="form-label">Level Range</label>
+                            <input type="text" id="level_range" name="level_range" class="form-control" 
+                                   placeholder="e.g., 1-5, 5-10, 1-20">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="max_players" class="form-label">Maximum Players</label>
+                            <input type="number" id="max_players" name="max_players" class="form-control" 
+                                   value="6" min="1" max="12">
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Initial Map Setup -->
+                        <h4 class="mb-3">Initial Battle Map</h4>
+                        <div class="mb-3">
+                            <label for="map_name" class="form-label">Map Name</label>
+                            <input type="text" id="map_name" name="map_name" class="form-control" 
+                                   placeholder="e.g., Starting Town Square">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="map_type" class="form-label">Map Type</label>
+                            <select id="map_type" name="map_type" class="form-select">
+                                <option value="">No initial map</option>
+                                <option value="dungeon">Dungeon</option>
+                                <option value="wilderness">Wilderness</option>
+                                <option value="city">City</option>
+                                <option value="building">Building</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+
+                        <div id="map_details" style="display: none;">
+                            <div class="mb-3">
+                                <label class="form-label">Grid Size</label>
+                                <div class="row">
+                                    <div class="col">
+                                        <input type="number" id="grid_width" name="grid_width" class="form-control" 
+                                               placeholder="Width" value="20" min="5" max="100">
+                                    </div>
+                                    <div class="col">
+                                        <input type="number" id="grid_height" name="grid_height" class="form-control" 
+                                               placeholder="Height" value="20" min="5" max="100">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="background_color" class="form-label">Background Color</label>
+                                <input type="color" id="background_color" name="background_color" 
+                                       class="form-control form-control-color" value="#ffffff">
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" id="show_grid" name="show_grid" class="form-check-input" checked>
+                                <label for="show_grid" class="form-check-label">Show Grid</label>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-primary w-100" onclick="createCampaign()">Create Campaign</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
+// Show/hide map details based on map type selection
+document.getElementById('map_type').addEventListener('change', function() {
+    const mapDetails = document.getElementById('map_details');
+    mapDetails.style.display = this.value ? 'block' : 'none';
+});
+
 function createCampaign() {
     const form = document.getElementById('campaign-form');
-    const formData = new FormData(form);
+    const formData = new FormData();
+    
+    // Campaign details
+    formData.append('name', document.getElementById('name').value);
+    formData.append('description', document.getElementById('description').value);
+    formData.append('setting', document.getElementById('setting').value);
+    formData.append('level_range', document.getElementById('level_range').value);
+    formData.append('max_players', document.getElementById('max_players').value);
+
+    // Map details (if selected)
+    const mapType = document.getElementById('map_type').value;
+    if (mapType) {
+        formData.append('map_name', document.getElementById('map_name').value);
+        formData.append('map_type', mapType);
+        formData.append('grid_width', document.getElementById('grid_width').value);
+        formData.append('grid_height', document.getElementById('grid_height').value);
+        formData.append('background_color', document.getElementById('background_color').value);
+        formData.append('show_grid', document.getElementById('show_grid').checked);
+    }
 
     fetch('/create_campaign', {
         method: 'POST',
@@ -34,14 +140,16 @@ function createCampaign() {
         return response.json();
     })
     .then(data => {
-        alert(data.message);
-        if (data.campaign) {
-            console.log(data.campaign);
+        if (data.success) {
+            alert(data.message);
+            window.location.href = `/campaign/${data.campaign.id}`;
+        } else {
+            alert(data.message || 'Error creating campaign');
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error creating campaign.');
+        alert('Error creating campaign. Please try again.');
     });
 }
 </script>

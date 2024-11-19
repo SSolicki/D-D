@@ -1,20 +1,97 @@
 {% extends "base.html" %}
 
-{% block title %}Participating Campaigns{% endblock %}
+{% block title %}Campaigns{% endblock %}
 
 {% block content %}
-<h1 class="text-center mb-4">Participating Campaigns</h1>
-<div id="campaigns-list" class="bg-secondary p-4 rounded">
-    {% if campaigns %}
-        {% for campaign in campaigns %}
-            <div class="mb-3 p-3 bg-dark text-light rounded">
-                <h4>{{ campaign.name }}</h4>
-                <p>Description: {{ campaign.description }}</p>
-                <a href="/join_campaign/{{ campaign.id }}" class="btn btn-primary">Join Campaign</a>
+<div class="container">
+    <!-- Participating Campaigns -->
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="mb-3">Your Campaigns</h2>
+            <div class="row">
+                {% if campaigns %}
+                    {% for campaign in campaigns %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ campaign.name }}</h5>
+                                    <p class="card-text">{{ campaign.description }}</p>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="badge bg-{{ 'success' if campaign.status == 'active' else 'warning' }}">
+                                                {{ campaign.status }}
+                                            </span>
+                                            {% if campaign.owner_id == current_user.id %}
+                                                <span class="badge bg-primary">DM</span>
+                                            {% endif %}
+                                        </div>
+                                        <a href="{{ url_for('campaign_details', campaign_id=campaign.id) }}" 
+                                           class="btn btn-primary">View Details</a>
+                                    </div>
+                                </div>
+                                <div class="card-footer text-muted">
+                                    Players: {{ campaign.members|length }}/{{ campaign.max_players }}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="col">
+                        <p>You are not participating in any campaigns yet.</p>
+                    </div>
+                {% endif %}
             </div>
-        {% endfor %}
-    {% else %}
-        <p>No campaigns found.</p>
-    {% endif %}
+        </div>
+    </div>
+
+    <!-- Available Campaigns -->
+    <div class="row">
+        <div class="col">
+            <h2 class="mb-3">Available Campaigns</h2>
+            <div class="row">
+                {% if available_campaigns %}
+                    {% for campaign in available_campaigns %}
+                        {% if campaign.status != 'draft' %}
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ campaign.name }}</h5>
+                                        <p class="card-text">{{ campaign.description }}</p>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <span class="badge bg-{{ 'success' if campaign.status == 'active' else 'secondary' }}">
+                                                    {{ campaign.status }}
+                                                </span>
+                                                <span class="badge bg-info">{{ campaign.setting }}</span>
+                                            </div>
+                                            {% if campaign.members|length < campaign.max_players %}
+                                                <form action="{{ url_for('join_campaign', campaign_id=campaign.id) }}" method="POST" style="display: inline;">
+                                                    <button type="submit" class="btn btn-success">Join Campaign</button>
+                                                </form>
+                                            {% else %}
+                                                <button class="btn btn-secondary" disabled>Campaign Full</button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="card-footer text-muted">
+                                        Players: {{ campaign.members|length }}/{{ campaign.max_players }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                    {% if available_campaigns|selectattr('status', 'ne', 'draft')|list|length == 0 %}
+                        <div class="col">
+                            <p>No available campaigns to join at the moment.</p>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="col">
+                        <p>No available campaigns to join at the moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

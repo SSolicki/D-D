@@ -19,23 +19,26 @@
                         <a class="nav-link" href="/">Home</a>
                     </li>
                     {% if current_user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="/character_creation">Character Creation</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="charactersDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Characters 
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="charactersDropdown">
+                            <li><a class="dropdown-item" href="{{ url_for('character_creation') }}">Create Character</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('view_characters') }}">My Characters</a></li>
+                        </ul>
+                    </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="campaignsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Campaigns
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="campaignsDropdown">
+                                <li><a class="dropdown-item" href="{{ url_for('campaigns_page') }}">Create Campaign</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('participating_campaigns') }}">My Campaigns</a></li>
+                            </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="/characters">My Characters</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/campaigns">Campaigns</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/participating_campaigns">Participating Campaigns</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/battle_map">Battle Map</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/logout">Logout</a>
+                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                         </li>
                     {% else %}
                         <li class="nav-item">

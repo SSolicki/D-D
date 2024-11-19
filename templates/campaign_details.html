@@ -1,0 +1,679 @@
+{% extends "base.html" %}
+
+{% block title %}{{ campaign.name }} - Campaign Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Campaign Overview -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">{{ campaign.name }}</h2>
+                    {% if current_user.id == campaign.owner_id %}
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#editCampaignModal">
+                        <i class="fas fa-edit"></i> Edit Campaign
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p class="lead">{{ campaign.description }}</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Setting:</strong> {{ campaign.setting }}</p>
+                            <p><strong>Level Range:</strong> {{ campaign.level_range }}</p>
+                            <p><strong>Status:</strong> 
+                                {% if current_user.id == campaign.owner_id %}
+                                    <form action="{{ url_for('update_campaign_status', campaign_id=campaign.id) }}" method="POST" class="d-inline">
+                                        <select name="status" class="form-select d-inline-block w-auto" onchange="this.form.submit()">
+                                            <option value="draft" {% if campaign.status == 'draft' %}selected{% endif %}>Draft</option>
+                                            <option value="active" {% if campaign.status == 'active' %}selected{% endif %}>Active</option>
+                                            <option value="completed" {% if campaign.status == 'completed' %}selected{% endif %}>Completed</option>
+                                        </select>
+                                    </form>
+                                {% else %}
+                                    <span class="badge bg-{{ 'success' if campaign.status == 'active' else 'secondary' }}">
+                                        {{ campaign.status }}
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Players:</strong> {{ campaign.members|length }}/{{ campaign.max_players }}</p>
+                            <p><strong>Next Session:</strong> {{ campaign.next_session.strftime('%Y-%m-%d %H:%M') if campaign.next_session else 'Not scheduled' }}</p>
+                            <p><strong>Created:</strong> {{ campaign.created_at.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Game Tools -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <ul class="nav nav-tabs card-header-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#battleMap">
+                                <i class="fas fa-map"></i> Battle Map
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#diceRoller">
+                                <i class="fas fa-dice"></i> Dice Roller
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#initiativeTracker">
+                                <i class="fas fa-list-ol"></i> Initiative
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-body">
+                    <div class="tab-content">
+                        <!-- Battle Map Tab -->
+                        <div class="tab-pane fade show active" id="battleMap">
+                            <div class="battle-map-container" style="height: 400px; background: #2a2a2a;">
+                                <div id="battle-map"></div>
+                                <div class="battle-map-controls mt-2">
+                                    <button class="btn btn-sm btn-outline-light" onclick="toggleGrid()">
+                                        <i class="fas fa-th"></i> Toggle Grid
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" onclick="addToken()">
+                                        <i class="fas fa-plus"></i> Add Token
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" onclick="clearMap()">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dice Roller Tab -->
+                        <div class="tab-pane fade" id="diceRoller">
+                            <div class="row g-2">
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d4')">d4</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d6')">d6</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d8')">d8</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d10')">d10</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d12')">d12</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d20')">d20</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-lg btn-outline-light" onclick="rollDice('d100')">d100</button>
+                                </div>
+                            </div>
+                            <div id="diceLog" class="mt-3">
+                                <h5>Roll History</h5>
+                                <div class="dice-log-container" style="max-height: 200px; overflow-y: auto;">
+                                    <ul class="list-group" id="diceRollLog"></ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Initiative Tracker Tab -->
+                        <div class="tab-pane fade" id="initiativeTracker">
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="initiativeName" placeholder="Character/Monster Name">
+                                    <input type="number" class="form-control" id="initiativeRoll" placeholder="Initiative Roll">
+                                    <button class="btn btn-outline-light" onclick="addToInitiative()">Add</button>
+                                </div>
+                            </div>
+                            <div id="initiativeList" class="list-group">
+                                <!-- Initiative entries will be added here -->
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-outline-light btn-sm" onclick="clearInitiative()">Clear All</button>
+                                <button class="btn btn-outline-light btn-sm" onclick="sortInitiative()">Sort</button>
+                                <button class="btn btn-outline-light btn-sm" onclick="nextTurn()">Next Turn</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Notes -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">Campaign Notes</h3>
+                    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                        Add Note
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if campaign.notes %}
+                        {% for note in campaign.notes|sort(attribute='created_at', reverse=true) %}
+                        <div class="note-card mb-3">
+                            <h5>{{ note.title }}</h5>
+                            <p class="text-muted">
+                                {{ note.note_type }} - {{ note.created_at.strftime('%Y-%m-%d') }}
+                            </p>
+                            <p>{{ note.content }}</p>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No notes yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Members List -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Campaign Members</h3>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h5>Dungeon Master</h5>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-danger me-2">DM</span>
+                            {{ campaign.owner.username }}
+                        </div>
+                    </div>
+                    <div>
+                        <h5>Players ({{ campaign.members|length }}/{{ campaign.max_players }})</h5>
+                        <ul class="list-group">
+                            {% for member in campaign.members if member.id != campaign.owner_id %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ member.username }}
+                                {% if current_user.id == campaign.owner_id %}
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeMember({{ member.id }})">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>
+                                {% endif %}
+                            </li>
+                            {% else %}
+                            <li class="list-group-item text-muted">No players have joined yet</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Characters in Campaign -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h3 class="mb-0">Characters</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                        {% for character in campaign_characters %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ character.name }}
+                            <span class="badge bg-secondary">{{ character.class_type }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% if current_user not in campaign.members %}
+            <div class="mb-4">
+                <a href="{{ url_for('select_character', campaign_id=campaign.id) }}" class="btn btn-primary">Join Campaign</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Campaign Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="noteForm">
+                    <div class="mb-3">
+                        <label for="noteTitle" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="noteTitle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteType" class="form-label">Note Type</label>
+                        <select class="form-control" id="noteType">
+                            <option value="session_summary">Session Summary</option>
+                            <option value="dm_note">DM Note</option>
+                            <option value="player_note">Player Note</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="noteContent" class="form-label">Content</label>
+                        <textarea class="form-control" id="noteContent" rows="4" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="addNote()">Save Note</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Campaign Modal -->
+<div class="modal fade" id="editCampaignModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <ul class="nav nav-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#basicInfo">Basic Info</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#itemRestrictions">Item Restrictions</a>
+                    </li>
+                </ul>
+                
+                <div class="tab-content mt-3">
+                    <!-- Basic Info Tab -->
+                    <div class="tab-pane fade show active" id="basicInfo">
+                        <form id="editCampaignForm">
+                            <div class="mb-3">
+                                <label class="form-label">Campaign Name</label>
+                                <input type="text" class="form-control" id="edit-name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="edit-description" rows="3" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Setting</label>
+                                        <input type="text" class="form-control" id="edit-setting">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Level Range</label>
+                                        <input type="text" class="form-control" id="edit-level-range">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Max Players</label>
+                                <input type="number" class="form-control" id="edit-max-players" min="1" value="5">
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Item Restrictions Tab -->
+                    <div class="tab-pane fade" id="itemRestrictions">
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6>Banned Items</h6>
+                                <button class="btn btn-sm btn-outline-primary" onclick="showAddBannedItem()">
+                                    <i class="fas fa-ban"></i> Ban Item
+                                </button>
+                            </div>
+                            <div class="table-responsive mt-2">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th>Reason</th>
+                                            <th>Banned By</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="banned-items-list">
+                                        <!-- Banned items will be populated here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveChanges()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ban Item Modal -->
+<div class="modal fade" id="banItemModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Ban Item</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="banItemForm">
+                    <div class="mb-3">
+                        <label class="form-label">Item</label>
+                        <select class="form-select" id="ban-item-select" required>
+                            <!-- Items will be populated here -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Reason for Ban</label>
+                        <textarea class="form-control" id="ban-reason" rows="2" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="banItem()">Ban Item</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addNote() {
+    const title = document.getElementById('noteTitle').value;
+    const content = document.getElementById('noteContent').value;
+    const noteType = document.getElementById('noteType').value;
+
+    fetch('/campaign/{{ campaign.id }}/add_note', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            title: title,
+            content: content,
+            note_type: noteType
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error adding note: ' + data.message);
+        }
+    });
+}
+
+function updateCampaign() {
+    const formData = {
+        name: document.getElementById('campaignName').value,
+        description: document.getElementById('campaignDescription').value,
+        setting: document.getElementById('campaignSetting').value,
+        level_range: document.getElementById('campaignLevelRange').value,
+        max_players: document.getElementById('campaignMaxPlayers').value,
+        status: document.getElementById('campaignStatus').value,
+        next_session: document.getElementById('campaignNextSession').value
+    };
+
+    fetch('/campaign/{{ campaign.id }}/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error updating campaign: ' + data.message);
+        }
+    });
+}
+
+// Battle Map Functions
+function toggleGrid() {
+    const map = document.getElementById('battle-map');
+    map.classList.toggle('grid-enabled');
+}
+
+function addToken() {
+    // Implementation for adding tokens
+    const tokenName = prompt('Enter token name:');
+    if (tokenName) {
+        const token = document.createElement('div');
+        token.className = 'battle-token';
+        token.textContent = tokenName[0].toUpperCase();
+        token.title = tokenName;
+        document.getElementById('battle-map').appendChild(token);
+        // Make token draggable
+        token.draggable = true;
+    }
+}
+
+function clearMap() {
+    if (confirm('Are you sure you want to clear the battle map?')) {
+        document.getElementById('battle-map').innerHTML = '';
+    }
+}
+
+// Dice Rolling Functions
+function rollDice(type) {
+    const roll = Math.floor(Math.random() * parseInt(type.substring(1))) + 1;
+    const log = document.getElementById('diceRollLog');
+    const entry = document.createElement('li');
+    entry.className = 'list-group-item';
+    entry.textContent = `${type}: ${roll}`;
+    log.insertBefore(entry, log.firstChild);
+    if (log.children.length > 10) log.removeChild(log.lastChild);
+}
+
+// Initiative Tracker Functions
+let initiativeOrder = [];
+
+function addToInitiative() {
+    const name = document.getElementById('initiativeName').value;
+    const roll = parseInt(document.getElementById('initiativeRoll').value);
+    if (name && !isNaN(roll)) {
+        initiativeOrder.push({ name, roll });
+        updateInitiativeDisplay();
+        document.getElementById('initiativeName').value = '';
+        document.getElementById('initiativeRoll').value = '';
+    }
+}
+
+function updateInitiativeDisplay() {
+    const list = document.getElementById('initiativeList');
+    list.innerHTML = '';
+    initiativeOrder.forEach((entry, index) => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <span>${entry.name}</span>
+            <span class="badge bg-primary">${entry.roll}</span>
+        `;
+        list.appendChild(item);
+    });
+}
+
+function clearInitiative() {
+    initiativeOrder = [];
+    updateInitiativeDisplay();
+}
+
+function sortInitiative() {
+    initiativeOrder.sort((a, b) => b.roll - a.roll);
+    updateInitiativeDisplay();
+}
+
+function nextTurn() {
+    if (initiativeOrder.length > 0) {
+        initiativeOrder.push(initiativeOrder.shift());
+        updateInitiativeDisplay();
+    }
+}
+
+// Member Management Functions
+function removeMember(userId) {
+    if (!confirm('Are you sure you want to remove this player from the campaign?')) {
+        return;
+    }
+    
+    fetch(`/campaign/{{ campaign.id }}/remove_member/${userId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Failed to remove member from campaign');
+    });
+}
+
+function showAddBannedItem() {
+    // Populate item select with available items
+    fetch('/items')
+        .then(response => response.json())
+        .then(items => {
+            const select = document.getElementById('ban-item-select');
+            select.innerHTML = '';
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.name;
+                select.appendChild(option);
+            });
+            
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('banItemModal'));
+            modal.show();
+        });
+}
+
+function banItem() {
+    const itemId = document.getElementById('ban-item-select').value;
+    const reason = document.getElementById('ban-reason').value;
+    
+    fetch(`/campaign/${currentCampaignId}/ban_item`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            item_id: itemId,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close the ban item modal
+            bootstrap.Modal.getInstance(document.getElementById('banItemModal')).hide();
+            // Refresh banned items list
+            loadBannedItems();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+function loadBannedItems() {
+    fetch(`/campaign/${currentCampaignId}/banned_items`)
+        .then(response => response.json())
+        .then(items => {
+            const list = document.getElementById('banned-items-list');
+            list.innerHTML = '';
+            
+            items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.name}</td>
+                    <td>${item.reason}</td>
+                    <td>${item.banned_by_name}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-danger" onclick="unbanItem(${item.id})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </td>
+                `;
+                list.appendChild(row);
+            });
+        });
+}
+
+function unbanItem(bannedItemId) {
+    if (confirm('Are you sure you want to unban this item?')) {
+        fetch(`/campaign/${currentCampaignId}/unban_item/${bannedItemId}`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadBannedItems();
+            } else {
+                alert(data.error);
+            }
+        });
+    }
+}
+
+// Load banned items when the edit campaign modal is shown
+document.getElementById('editCampaignModal').addEventListener('show.bs.modal', function () {
+    loadBannedItems();
+});
+</script>
+
+<style>
+.battle-map-container {
+    border: 1px solid #444;
+    border-radius: 4px;
+    position: relative;
+}
+
+#battle-map {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+#battle-map.grid-enabled {
+    background-image: linear-gradient(#444 1px, transparent 1px),
+                      linear-gradient(90deg, #444 1px, transparent 1px);
+    background-size: 50px 50px;
+}
+
+.battle-token {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #666;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    cursor: move;
+    user-select: none;
+}
+
+.dice-log-container {
+    border: 1px solid #444;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

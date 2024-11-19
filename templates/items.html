@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Items{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Items</h1>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Filters -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Filters</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="itemType" class="form-label">Item Type</label>
+                        <select class="form-select" id="itemType">
+                            <option value="">All</option>
+                            <option value="weapon">Weapons</option>
+                            <option value="armor">Armor</option>
+                            <option value="potion">Potions</option>
+                            <option value="scroll">Scrolls</option>
+                            <option value="wondrous">Wondrous Items</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="rarity" class="form-label">Rarity</label>
+                        <select class="form-select" id="rarity">
+                            <option value="">All</option>
+                            <option value="common">Common</option>
+                            <option value="uncommon">Uncommon</option>
+                            <option value="rare">Rare</option>
+                            <option value="very-rare">Very Rare</option>
+                            <option value="legendary">Legendary</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="maxCost" class="form-label">Maximum Cost (in gold)</label>
+                        <input type="number" class="form-control" id="maxCost">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-9">
+            <!-- Items Grid -->
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                {% for item in items %}
+                <div class="col item-card" 
+                     data-type="{{ item.item_type }}"
+                     data-rarity="{{ item.rarity }}"
+                     data-cost="{{ item.cost }}">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ item.name }}</h5>
+                            <p class="card-text">{{ item.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="badge bg-primary">{{ item.item_type }}</span>
+                                <span class="badge bg-{{ 'success' if item.rarity == 'common' 
+                                                    else 'info' if item.rarity == 'uncommon'
+                                                    else 'warning' if item.rarity == 'rare'
+                                                    else 'danger' if item.rarity == 'very-rare'
+                                                    else 'secondary' }}">
+                                    {{ item.rarity }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <small class="text-muted">
+                                Cost: {{ (item.cost // 100)|int }}g 
+                                {{ ((item.cost % 100) // 10)|int }}s 
+                                {{ item.cost % 10 }}c
+                            </small>
+                            <button class="btn btn-sm btn-primary float-end buy-item-btn"
+                                    data-item-id="{{ item.id }}"
+                                    data-item-name="{{ item.name }}"
+                                    data-item-cost="{{ item.cost }}">
+                                Add to Inventory
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Inventory Modal -->
+<div class="modal fade" id="addToInventoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Item to Inventory</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addToInventoryForm">
+                    <input type="hidden" id="itemId" name="item_id">
+                    <div class="mb-3">
+                        <label for="characterSelect" class="form-label">Select Character</label>
+                        <select class="form-select" id="characterSelect" required>
+                            {% for character in current_user.characters %}
+                            <option value="{{ character.id }}">{{ character.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="quantity" class="form-label">Quantity</label>
+                        <input type="number" class="form-control" id="quantity" name="quantity" value="1" min="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <p>Total Cost: <span id="totalCost">0</span></p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmAddItem">Add to Inventory</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter functionality
+    const itemType = document.getElementById('itemType');
+    const rarity = document.getElementById('rarity');
+    const maxCost = document.getElementById('maxCost');
+    const itemCards = document.querySelectorAll('.item-card');
+    
+    function filterItems() {
+        const typeFilter = itemType.value;
+        const rarityFilter = rarity.value;
+        const costFilter = maxCost.value ? parseInt(maxCost.value) * 100 : Infinity;
+        
+        itemCards.forEach(card => {
+            const matchesType = !typeFilter || card.dataset.type === typeFilter;
+            const matchesRarity = !rarityFilter || card.dataset.rarity === rarityFilter;
+            const matchesCost = parseInt(card.dataset.cost) <= costFilter;
+            
+            card.style.display = matchesType && matchesRarity && matchesCost ? '' : 'none';
+        });
+    }
+    
+    itemType.addEventListener('change', filterItems);
+    rarity.addEventListener('change', filterItems);
+    maxCost.addEventListener('input', filterItems);
+    
+    // Buy item functionality
+    const modal = new bootstrap.Modal(document.getElementById('addToInventoryModal'));
+    const buyButtons = document.querySelectorAll('.buy-item-btn');
+    const quantityInput = document.getElementById('quantity');
+    const totalCostSpan = document.getElementById('totalCost');
+    let currentItemCost = 0;
+    
+    buyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const itemId = button.dataset.itemId;
+            const itemName = button.dataset.itemName;
+            currentItemCost = parseInt(button.dataset.itemCost);
+            
+            document.getElementById('itemId').value = itemId;
+            updateTotalCost();
+            modal.show();
+        });
+    });
+    
+    quantityInput.addEventListener('input', updateTotalCost);
+    
+    function updateTotalCost() {
+        const quantity = parseInt(quantityInput.value) || 0;
+        const total = currentItemCost * quantity;
+        const gold = Math.floor(total / 100);
+        const silver = Math.floor((total % 100) / 10);
+        const copper = total % 10;
+        totalCostSpan.textContent = `${gold}g ${silver}s ${copper}c`;
+    }
+    
+    document.getElementById('confirmAddItem').addEventListener('click', async () => {
+        const characterId = document.getElementById('characterSelect').value;
+        const formData = new FormData(document.getElementById('addToInventoryForm'));
+        
+        try {
+            const response = await fetch(`/character/${characterId}/add_item`, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            if (result.success) {
+                alert('Item added to inventory successfully!');
+                modal.hide();
+            } else {
+                alert(result.message || 'Failed to add item to inventory');
+            }
+        } catch (error) {
+            alert('An error occurred while adding the item');
+        }
+    });
+});
+</script>
+{% endblock %}

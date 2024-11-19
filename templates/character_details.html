@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}{{ character.name }} - Character Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Character Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="mb-0">{{ character.name }}</h1>
+            <p class="text-muted">
+                Level {{ character.level }} {{ character.race }} {{ character.character_class }}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('view_characters') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Characters
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-4">
+            <div class="card bg-secondary mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6>Ability Scores</h6>
+                        <div class="row g-2">
+                            <div class="col-4">
+                                <div class="p-2 border rounded text-center">
+                                    <small>STR</small>
+                                    <h5 class="mb-0">{{ character.strength }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded text-center">
+                                    <small>DEX</small>
+                                    <h5 class="mb-0">{{ character.dexterity }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded text-center">
+                                    <small>CON</small>
+                                    <h5 class="mb-0">{{ character.constitution }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded text-center">
+                                    <small>INT</small>
+                                    <h5 class="mb-0">{{ character.intelligence }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded text-center">
+                                    <small>WIS</small>
+                                    <h5 class="mb-0">{{ character.wisdom }}</h5>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-2 border rounded text-center">
+                                    <small>CHA</small>
+                                    <h5 class="mb-0">{{ character.charisma }}</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if character.background %}
+                    <div class="mb-3">
+                        <h6>Background</h6>
+                        <p class="small text-muted">{{ character.background }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if character.campaign %}
+                    <div class="mb-3">
+                        <h6>Active Campaign</h6>
+                        <p class="small text-muted">{{ character.campaign.name }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-8">
+            <!-- Placeholder for tabs (inventory, etc.) - will be added in next step -->
+            <div class="card bg-secondary">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">More Details Coming Soon</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Inventory and additional features will be added here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
