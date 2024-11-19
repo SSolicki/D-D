@@ -30,23 +30,48 @@ class Character(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'))
     name = db.Column(db.String(100), nullable=False)
-    race = db.Column(db.String(50))
-    character_class = db.Column(db.String(50))
-    level = db.Column(db.Integer, default=1)
-    background = db.Column(db.String(50))
-    alignment = db.Column(db.String(50))
+    race = db.Column(db.String(50))  # For different races/ancestries in Savage Worlds
+    rank = db.Column(db.String(50), default='Novice')  # Novice, Seasoned, Veteran, Heroic, Legendary
     experience_points = db.Column(db.Integer, default=0)
-    strength = db.Column(db.Integer)
-    dexterity = db.Column(db.Integer)
-    constitution = db.Column(db.Integer)
-    intelligence = db.Column(db.Integer)
-    wisdom = db.Column(db.Integer)
-    charisma = db.Column(db.Integer)
+    
+    # Attributes
+    agility = db.Column(db.String(10), default='d6')  # Stored as 'd4', 'd6', etc.
+    smarts = db.Column(db.String(10), default='d6')
+    spirit = db.Column(db.String(10), default='d6')
+    strength = db.Column(db.String(10), default='d6')
+    vigor = db.Column(db.String(10), default='d6')
+    
+    # Derived Stats
+    pace = db.Column(db.Integer, default=6)
+    parry = db.Column(db.Integer, default=2)  # 2 + Fighting/2
+    toughness = db.Column(db.Integer, default=4)  # 2 + Vigor/2
+    charisma = db.Column(db.Integer, default=0)
+    
+    # Character Concept
+    concept = db.Column(db.String(500))  # Character concept/archetype
+    hindrances = db.Column(db.String(1000))  # Major and Minor Hindrances
+    edges = db.Column(db.String(1000))  # Character Edges
+    
+    # Skills (stored as JSON strings)
+    core_skills = db.Column(db.String(1000))  # Core skills like Fighting, Shooting, etc.
+    knowledge_skills = db.Column(db.String(1000))  # Knowledge-based skills
+    
+    # Powers and Special Abilities
+    powers = db.Column(db.String(1000))  # For characters with Arcane Backgrounds
+    power_points = db.Column(db.Integer, default=0)
+    
+    # Gear and Resources
+    money = db.Column(db.Integer, default=500)  # Starting money in campaign currency
+    
+    # Wounds and Status
+    wounds = db.Column(db.Integer, default=0)  # 0-3 wounds before Incapacitated
+    fatigue = db.Column(db.Integer, default=0)  # 0-2 fatigue levels
+    bennies = db.Column(db.Integer, default=3)  # Refresh each session
+    
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Add relationships
-    inventory = db.relationship('CharacterInventory', backref='character', lazy=True)
-    currency = db.relationship('CharacterCurrency', backref='character', uselist=False, lazy=True)
+    # Relationships
+    inventory = db.relationship('CharacterInventory', backref='character_ref', lazy=True)
 
 # Campaign model
 class Campaign(db.Model):
@@ -54,15 +79,58 @@ class Campaign(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(500), nullable=False)
-    setting = db.Column(db.String(100))
-    level_range = db.Column(db.String(50))
-    max_players = db.Column(db.Integer, default=5)
+    setting = db.Column(db.String(100))  # e.g., Deadlands, Rifts, Fantasy, etc.
+    
+    # Campaign Rules
+    power_level = db.Column(db.String(50), default='Novice')  # Starting power level
+    available_races = db.Column(db.String(1000))  # List of allowed races
+    available_edges = db.Column(db.String(1000))  # List of allowed edges
+    house_rules = db.Column(db.Text)  # Custom rules for this campaign
+    
+    # Campaign Status
     status = db.Column(db.String(20), default='draft')  # 'draft', 'active', or 'completed'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     next_session = db.Column(db.DateTime)
+    
+    # Starting Resources
+    starting_money = db.Column(db.Integer, default=500)
+    starting_bennies = db.Column(db.Integer, default=3)
+    
+    # Campaign Features
+    use_powers = db.Column(db.Boolean, default=True)  # Whether magical powers are allowed
+    use_guns = db.Column(db.Boolean, default=True)  # Whether firearms are available
+    use_vehicles = db.Column(db.Boolean, default=True)  # Whether vehicles are available
+    
+    # New field: max_players
+    max_players = db.Column(db.Integer, default=4)
+    
+    # Relationships
     members = db.relationship('User', secondary='campaign_members', backref='campaigns')
     notes = db.relationship('CampaignNote', backref='campaign', lazy=True)
     owner = db.relationship('User', foreign_keys=[owner_id], backref='owned_campaigns')
+
+# Item model
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    weight = db.Column(db.Float, default=0)
+    item_type = db.Column(db.String(50), nullable=False)  # Weapon, Armor, Gear, etc.
+    
+    # Weapon Stats
+    damage = db.Column(db.String(20))  # e.g., "2d6+2" for weapons
+    range = db.Column(db.String(20))  # Range increments for ranged weapons
+    ap = db.Column(db.Integer)  # Armor Piercing value
+    rof = db.Column(db.Integer, default=1)  # Rate of Fire
+    shots = db.Column(db.Integer)  # Ammunition capacity
+    min_str = db.Column(db.String(10))  # Minimum Strength die type required
+    
+    # Armor Stats
+    armor = db.Column(db.Integer)  # Armor bonus
+    coverage = db.Column(db.String(50))  # What body parts it covers
+    
+    # General Properties
+    cost = db.Column(db.Integer)  # Cost in campaign currency
+    notes = db.Column(db.Text)  # Special rules or effects
 
 # Campaign Notes model for DM notes and session summaries
 class CampaignNote(db.Model):
@@ -91,41 +159,14 @@ class Map(db.Model):
     creator = db.relationship('User', foreign_keys=[created_by], backref='created_maps')
 
 # Item and Inventory Models
-class Item(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    description = db.Column(db.Text)
-    item_type = db.Column(db.String(50))  # weapon, armor, potion, etc.
-    rarity = db.Column(db.String(50))  # common, uncommon, rare, very rare, legendary
-    cost = db.Column(db.Integer)  # in copper pieces
-    weight = db.Column(db.Float)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
-
 class CharacterInventory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
     quantity = db.Column(db.Integer, default=1)
     equipped = db.Column(db.Boolean, default=False)
-    notes = db.Column(db.Text)
-
-class CharacterCurrency(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    character_id = db.Column(db.Integer, db.ForeignKey('character.id'), nullable=False)
-    copper = db.Column(db.Integer, default=0)
-    silver = db.Column(db.Integer, default=0)
-    electrum = db.Column(db.Integer, default=0)
-    gold = db.Column(db.Integer, default=0)
-    platinum = db.Column(db.Integer, default=0)
-
-class CampaignBannedItems(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.id'), nullable=False)
-    item_id = db.Column(db.Integer, db.ForeignKey('item.id'), nullable=False)
-    reason = db.Column(db.Text)
-    banned_at = db.Column(db.DateTime, default=datetime.utcnow)
-    banned_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    item = db.relationship('Item')
 
 campaign_members = db.Table('campaign_members',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
@@ -202,67 +243,102 @@ def save_character():
     # Server-side validation
     try:
         name = request.form['name']
-        character_class = request.form['class']
+        rank = request.form['rank']
         race = request.form['race']
-        level = int(request.form.get('level', 1))
-        background = request.form.get('background', '')
-        alignment = request.form.get('alignment', '')
         experience_points = int(request.form.get('experience_points', 0))
-        strength = int(request.form['strength'])
-        dexterity = int(request.form['dexterity'])
-        constitution = int(request.form.get('constitution', 10))
-        intelligence = int(request.form['intelligence'])
-        wisdom = int(request.form.get('wisdom', 10))
-        charisma = int(request.form.get('charisma', 10))
-
-        if not all(1 <= stat <= 20 for stat in [strength, dexterity, constitution, intelligence, wisdom, charisma]):
-            raise ValueError("All attributes must be between 1 and 20.")
+        
+        # Get attributes
+        agility = request.form.get('agility', 'd6')
+        smarts = request.form.get('smarts', 'd6')
+        spirit = request.form.get('spirit', 'd6')
+        strength = request.form.get('strength', 'd6')
+        vigor = request.form.get('vigor', 'd6')
+        
+        # Get derived stats
+        pace = int(request.form.get('pace', 6))
+        parry = int(request.form.get('parry', 2))
+        toughness = int(request.form.get('toughness', 4))
+        charisma = int(request.form.get('charisma', 0))
+        
+        # Get character concept
+        concept = request.form.get('concept', '')
+        hindrances = request.form.get('hindrances', '')
+        edges = request.form.get('edges', '')
+        
+        # Get skills
+        core_skills = request.form.get('core_skills', '')
+        knowledge_skills = request.form.get('knowledge_skills', '')
+        
+        # Get powers and special abilities
+        powers = request.form.get('powers', '')
+        power_points = int(request.form.get('power_points', 0))
+        
+        # Get gear and resources
+        money = int(request.form.get('money', 500))
+        
+        # Get wounds and status
+        wounds = int(request.form.get('wounds', 0))
+        fatigue = int(request.form.get('fatigue', 0))
+        bennies = int(request.form.get('bennies', 3))
 
         character = Character(
             user_id=current_user.id,
             name=name,
-            character_class=character_class,
+            rank=rank,
             race=race,
-            level=level,
-            background=background,
-            alignment=alignment,
             experience_points=experience_points,
+            agility=agility,
+            smarts=smarts,
+            spirit=spirit,
             strength=strength,
-            dexterity=dexterity,
-            constitution=constitution,
-            intelligence=intelligence,
-            wisdom=wisdom,
-            charisma=charisma
+            vigor=vigor,
+            pace=pace,
+            parry=parry,
+            toughness=toughness,
+            charisma=charisma,
+            concept=concept,
+            hindrances=hindrances,
+            edges=edges,
+            core_skills=core_skills,
+            knowledge_skills=knowledge_skills,
+            powers=powers,
+            power_points=power_points,
+            money=money,
+            wounds=wounds,
+            fatigue=fatigue,
+            bennies=bennies
         )
         db.session.add(character)
         db.session.commit()
         
-        # Create default empty currency for the character
-        currency = CharacterCurrency(
-            character_id=character.id,
-            copper=0,
-            silver=0,
-            electrum=0,
-            gold=0,
-            platinum=0
-        )
-        db.session.add(currency)
-        db.session.commit()
-
         return jsonify({
             'message': 'Character saved successfully',
             'character': {
                 'id': character.id,
                 'name': character.name,
-                'class': character.character_class,
+                'rank': character.rank,
                 'race': character.race,
-                'level': character.level,
+                'experience_points': character.experience_points,
+                'agility': character.agility,
+                'smarts': character.smarts,
+                'spirit': character.spirit,
                 'strength': character.strength,
-                'dexterity': character.dexterity,
-                'constitution': character.constitution,
-                'intelligence': character.intelligence,
-                'wisdom': character.wisdom,
-                'charisma': character.charisma
+                'vigor': character.vigor,
+                'pace': character.pace,
+                'parry': character.parry,
+                'toughness': character.toughness,
+                'charisma': character.charisma,
+                'concept': character.concept,
+                'hindrances': character.hindrances,
+                'edges': character.edges,
+                'core_skills': character.core_skills,
+                'knowledge_skills': character.knowledge_skills,
+                'powers': character.powers,
+                'power_points': character.power_points,
+                'money': character.money,
+                'wounds': character.wounds,
+                'fatigue': character.fatigue,
+                'bennies': character.bennies
             }
         })
     except ValueError as e:
@@ -309,39 +385,60 @@ def campaign_details(campaign_id):
 @login_required
 def create_campaign():
     if request.method == 'POST':
+        data = request.get_json()
         campaign_data = {
-            'name': request.form.get('name'),
-            'description': request.form.get('description'),
-            'setting': request.form.get('setting'),
-            'level_range': request.form.get('level_range'),
-            'max_players': int(request.form.get('max_players', 5)),
-            'status': request.form.get('status', 'draft'),
-            'owner_id': current_user.id
+            'name': data.get('name'),
+            'description': data.get('description'),
+            'setting': data.get('setting'),
+            'power_level': data.get('power_level', 'Novice'),
+            'available_races': data.get('available_races', ''),
+            'available_edges': data.get('available_edges', ''),
+            'house_rules': data.get('house_rules', ''),
+            'starting_money': int(data.get('starting_money', 500)),
+            'starting_bennies': int(data.get('starting_bennies', 3)),
+            'use_powers': data.get('use_powers', True),
+            'use_guns': data.get('use_guns', True),
+            'use_vehicles': data.get('use_vehicles', True),
+            'owner_id': current_user.id,
+            'max_players': data.get('max_players', 4)
         }
         
-        campaign = Campaign(
-            name=campaign_data['name'],
-            description=campaign_data['description'],
-            setting=campaign_data['setting'],
-            level_range=campaign_data['level_range'],
-            max_players=campaign_data['max_players'],
-            status=campaign_data['status'],
-            owner_id=campaign_data['owner_id']
-        )
-        
-        db.session.add(campaign)
-        db.session.commit()
-        
-        response_data = {
-            'success': True,
-            'message': 'Campaign created successfully!',
-            'campaign': {
-                'id': campaign.id,
-                'name': campaign.name
+        try:
+            campaign = Campaign(
+                name=campaign_data['name'],
+                description=campaign_data['description'],
+                setting=campaign_data['setting'],
+                power_level=campaign_data['power_level'],
+                available_races=campaign_data['available_races'],
+                available_edges=campaign_data['available_edges'],
+                house_rules=campaign_data['house_rules'],
+                starting_money=campaign_data['starting_money'],
+                starting_bennies=campaign_data['starting_bennies'],
+                use_powers=campaign_data['use_powers'],
+                use_guns=campaign_data['use_guns'],
+                use_vehicles=campaign_data['use_vehicles'],
+                owner_id=campaign_data['owner_id'],
+                max_players=campaign_data['max_players']
+            )
+            
+            db.session.add(campaign)
+            db.session.commit()
+            
+            response_data = {
+                'success': True,
+                'message': 'Campaign created successfully!',
+                'campaign': {
+                    'id': campaign.id,
+                    'name': campaign.name
+                }
             }
-        }
-        
-        return jsonify(response_data)
+            return jsonify(response_data)
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({
+                'success': False,
+                'message': str(e)
+            }), 400
     
     return render_template('create_campaign.html')
 
@@ -357,9 +454,15 @@ def update_campaign(campaign_id):
         campaign.name = data.get('name', campaign.name)
         campaign.description = data.get('description', campaign.description)
         campaign.setting = data.get('setting', campaign.setting)
-        campaign.level_range = data.get('level_range', campaign.level_range)
-        campaign.max_players = data.get('max_players', campaign.max_players)
-        campaign.status = data.get('status', campaign.status)
+        campaign.power_level = data.get('power_level', campaign.power_level)
+        campaign.available_races = data.get('available_races', campaign.available_races)
+        campaign.available_edges = data.get('available_edges', campaign.available_edges)
+        campaign.house_rules = data.get('house_rules', campaign.house_rules)
+        campaign.starting_money = data.get('starting_money', campaign.starting_money)
+        campaign.starting_bennies = data.get('starting_bennies', campaign.starting_bennies)
+        campaign.use_powers = data.get('use_powers', campaign.use_powers)
+        campaign.use_guns = data.get('use_guns', campaign.use_guns)
+        campaign.use_vehicles = data.get('use_vehicles', campaign.use_vehicles)
         
         next_session = data.get('next_session')
         if next_session:
@@ -595,120 +698,192 @@ def items():
     items = Item.query.all()
     return render_template('items.html', items=items)
 
-@app.route('/character/<int:character_id>/inventory')
+# Inventory Management Routes
+@app.route('/character/<int:character_id>/inventory/add', methods=['POST'])
 @login_required
-def character_inventory(character_id):
-    character = Character.query.get_or_404(character_id)
-    if character.user_id != current_user.id and not current_user.is_dm:
-        flash('You do not have permission to view this inventory.', 'danger')
-        return redirect(url_for('characters'))
-    
-    return render_template('character_inventory.html', character=character)
-
-@app.route('/character/<int:character_id>/add_item', methods=['POST'])
-@login_required
-def add_item_to_character(character_id):
+def add_item_to_inventory(character_id):
     character = Character.query.get_or_404(character_id)
     if character.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-        
-    data = request.get_json()
-    item_id = data.get('item_id')
-    quantity = data.get('quantity', 1)
-    equipped = data.get('equipped', False)
-    notes = data.get('notes', '')
-    
-    # Check if item is banned in character's campaign
-    if character.campaign:
-        banned_item = CampaignBannedItems.query.filter_by(
-            campaign_id=character.campaign.id,
-            item_id=item_id
-        ).first()
-        if banned_item:
-            return jsonify({
-                'error': f'This item is banned in this campaign. Reason: {banned_item.reason}'
-            }), 400
-    
-    # Get the item and check if it exists
-    item = Item.query.get_or_404(item_id)
-    
-    # Check if character already has this item
-    existing_item = CharacterInventory.query.filter_by(
-        character_id=character_id,
-        item_id=item_id
-    ).first()
-    
-    if existing_item:
-        existing_item.quantity += quantity
-        existing_item.notes = notes if notes else existing_item.notes
-    else:
-        new_item = CharacterInventory(
-            character_id=character_id,
-            item_id=item_id,
-            quantity=quantity,
-            equipped=equipped,
-            notes=notes
-        )
-        db.session.add(new_item)
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
     try:
+        data = request.get_json()
+        item = Item(
+            name=data['name'],
+            weight=float(data['weight']),
+            item_type=data['item_type']
+        )
+        db.session.add(item)
         db.session.commit()
-        return jsonify({'success': True})
+        
+        inventory_item = CharacterInventory(
+            character_id=character_id,
+            item_id=item.id,
+            quantity=int(data['quantity']),
+            equipped=False
+        )
+        db.session.add(inventory_item)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Item added successfully',
+            'item': {
+                'id': item.id,
+                'name': item.name,
+                'weight': item.weight,
+                'quantity': inventory_item.quantity
+            }
+        })
     except Exception as e:
         db.session.rollback()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'success': False, 'message': str(e)}), 400
 
-@app.route('/character/<int:character_id>/remove_item/<int:inventory_id>', methods=['POST'])
+@app.route('/character/<int:character_id>/inventory/<int:inventory_id>/remove', methods=['POST'])
 @login_required
-def remove_item(character_id, inventory_id):
+def remove_inventory_item(character_id, inventory_id):
     character = Character.query.get_or_404(character_id)
     if character.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-        
-    inventory_item = CharacterInventory.query.get_or_404(inventory_id)
-    if inventory_item.character_id != character_id:
-        return jsonify({'error': 'Invalid item'}), 400
-        
-    db.session.delete(inventory_item)
-    db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/character/<int:character_id>/toggle_equipped/<int:inventory_id>', methods=['POST'])
-@login_required
-def toggle_equipped(character_id, inventory_id):
-    character = Character.query.get_or_404(character_id)
-    if character.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-        
-    inventory_item = CharacterInventory.query.get_or_404(inventory_id)
-    if inventory_item.character_id != character_id:
-        return jsonify({'error': 'Invalid item'}), 400
-        
-    inventory_item.equipped = not inventory_item.equipped
-    db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/character/<int:character_id>/update_currency', methods=['POST'])
-@login_required
-def update_currency(character_id):
-    character = Character.query.get_or_404(character_id)
-    if character.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-        
-    data = request.get_json()
-    currency = character.currency
-    if not currency:
-        currency = CharacterCurrency(character_id=character.id)
-        db.session.add(currency)
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
-    currency.platinum = data.get('platinum', 0)
-    currency.gold = data.get('gold', 0)
-    currency.electrum = data.get('electrum', 0)
-    currency.silver = data.get('silver', 0)
-    currency.copper = data.get('copper', 0)
+    try:
+        inventory_item = CharacterInventory.query.get_or_404(inventory_id)
+        if inventory_item.character_id != character_id:
+            return jsonify({'success': False, 'message': 'Item not found'}), 404
+        
+        db.session.delete(inventory_item)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Item removed successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+@app.route('/character/<int:character_id>/inventory/<int:inventory_id>/toggle-equipped', methods=['POST'])
+@login_required
+def toggle_item_equipped(character_id, inventory_id):
+    character = Character.query.get_or_404(character_id)
+    if character.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     
-    db.session.commit()
-    return jsonify({'success': True})
+    try:
+        inventory_item = CharacterInventory.query.get_or_404(inventory_id)
+        if inventory_item.character_id != character_id:
+            return jsonify({'success': False, 'message': 'Item not found'}), 404
+        
+        # Toggle equipped status
+        inventory_item.equipped = not inventory_item.equipped
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Item {"equipped" if inventory_item.equipped else "unequipped"} successfully'
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 400
+
+@app.route('/character/<int:character_id>/inventory', methods=['GET'])
+@login_required
+def get_inventory(character_id):
+    character = Character.query.get_or_404(character_id)
+    if character.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    inventory_items = []
+    for inv in character.inventory:
+        item = Item.query.get(inv.item_id)
+        inventory_items.append({
+            'id': inv.id,
+            'name': item.name,
+            'quantity': inv.quantity,
+            'weight': item.weight,
+            'equipped': inv.equipped,
+            'item_type': item.item_type
+        })
+    
+    return jsonify({
+        'success': True,
+        'inventory': inventory_items,
+        'total_weight': sum(item['weight'] * item['quantity'] for item in inventory_items)
+    })
+
+@app.route('/character/<int:character_id>')
+@login_required
+def get_character(character_id):
+    character = Character.query.get_or_404(character_id)
+    if character.user_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    inventory_items = []
+    for inv in character.inventory:
+        item = Item.query.get(inv.item_id)
+        inventory_items.append({
+            'id': inv.id,
+            'name': item.name,
+            'quantity': inv.quantity,
+            'weight': item.weight,
+            'equipped': inv.equipped,
+            'notes': inv.notes
+        })
+        
+    return jsonify({
+        'id': character.id,
+        'name': character.name,
+        'rank': character.rank,
+        'race': character.race,
+        'experience_points': character.experience_points,
+        'agility': character.agility,
+        'smarts': character.smarts,
+        'spirit': character.spirit,
+        'strength': character.strength,
+        'vigor': character.vigor,
+        'pace': character.pace,
+        'parry': character.parry,
+        'toughness': character.toughness,
+        'charisma': character.charisma,
+        'concept': character.concept,
+        'hindrances': character.hindrances,
+        'edges': character.edges,
+        'core_skills': character.core_skills,
+        'knowledge_skills': character.knowledge_skills,
+        'powers': character.powers,
+        'power_points': character.power_points,
+        'money': character.money,
+        'wounds': character.wounds,
+        'fatigue': character.fatigue,
+        'bennies': character.bennies,
+        'inventory': inventory_items
+    })
+
+@app.route('/campaign/<int:campaign_id>/banned_items')
+@login_required
+def get_banned_items(campaign_id):
+    campaign = Campaign.query.get_or_404(campaign_id)
+    if campaign.owner_id != current_user.id:
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    banned_items = []
+    for banned in CampaignBannedItems.query.filter_by(campaign_id=campaign_id).all():
+        item = Item.query.get(banned.item_id)
+        banned_by = User.query.get(banned.banned_by)
+        banned_items.append({
+            'id': banned.id,
+            'name': item.name,
+            'reason': banned.reason,
+            'banned_by_name': banned_by.username
+        })
+    
+    return jsonify(banned_items)
+
+@app.route('/character/<int:character_id>/details')
+@login_required
+def character_details(character_id):
+    character = Character.query.get_or_404(character_id)
+    if character.user_id != current_user.id:
+        flash('You do not have permission to view this character.', 'error')
+        return redirect(url_for('characters'))
+    return render_template('character_details.html', character=character)
 
 @app.route('/campaign/<int:campaign_id>/banned_items')
 @login_required
@@ -771,89 +946,8 @@ def unban_item(campaign_id, banned_item_id):
     db.session.commit()
     return jsonify({'success': True})
 
-@app.route('/character/<int:character_id>')
-@login_required
-def get_character(character_id):
-    character = Character.query.get_or_404(character_id)
-    if character.user_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-        
-    inventory_items = []
-    for inv in character.inventory:
-        item = Item.query.get(inv.item_id)
-        inventory_items.append({
-            'id': inv.id,
-            'name': item.name,
-            'quantity': inv.quantity,
-            'weight': item.weight,
-            'equipped': inv.equipped,
-            'notes': inv.notes
-        })
-        
-    currency = character.currency
-    if not currency:
-        currency = CharacterCurrency(character_id=character.id)
-        db.session.add(currency)
-        db.session.commit()
-    
-    return jsonify({
-        'id': character.id,
-        'name': character.name,
-        'race': character.race,
-        'class_type': character.character_class,
-        'level': character.level,
-        'strength': character.strength,
-        'dexterity': character.dexterity,
-        'constitution': character.constitution,
-        'intelligence': character.intelligence,
-        'wisdom': character.wisdom,
-        'charisma': character.charisma,
-        'inventory': inventory_items,
-        'currency': {
-            'platinum': currency.platinum,
-            'gold': currency.gold,
-            'electrum': currency.electrum,
-            'silver': currency.silver,
-            'copper': currency.copper
-        }
-    })
-
-@app.route('/campaign/<int:campaign_id>/banned_items')
-@login_required
-def get_banned_items(campaign_id):
-    campaign = Campaign.query.get_or_404(campaign_id)
-    if campaign.owner_id != current_user.id:
-        return jsonify({'error': 'Unauthorized'}), 403
-        
-    banned_items = []
-    for banned in CampaignBannedItems.query.filter_by(campaign_id=campaign_id).all():
-        item = Item.query.get(banned.item_id)
-        banned_by = User.query.get(banned.banned_by)
-        banned_items.append({
-            'id': banned.id,
-            'name': item.name,
-            'reason': banned.reason,
-            'banned_by_name': banned_by.username
-        })
-    
-    return jsonify(banned_items)
-
-@app.route('/character/<int:character_id>/details')
-@login_required
-def character_details(character_id):
-    character = Character.query.get_or_404(character_id)
-    if character.user_id != current_user.id:
-        flash('You do not have permission to view this character.', 'error')
-        return redirect(url_for('characters'))
-    return render_template('character_details.html', character=character)
-
 if __name__ == '__main__':
     with app.app_context():
-        while True:
-            try:
-                db.create_all()
-                break
-            except Exception as e:
-                print(f"Error creating database: {e}. Retrying in 5 seconds...")
-                time.sleep(5)
-    app.run(debug=True)
+        db.create_all()  # Create all database tables
+        print("Database tables created successfully!")
+        app.run(debug=True)

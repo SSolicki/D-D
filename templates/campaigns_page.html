@@ -1,0 +1,354 @@
+{% extends "base.html" %}
+
+{% block title %}Campaigns{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Campaigns</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+            <i class="fas fa-plus"></i> Create Campaign
+        </button>
+    </div>
+
+    <!-- Tabs for different campaign views -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#my-campaigns">My Campaigns</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#participating">Participating</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#available">Available Campaigns</a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- My Campaigns (as GM) -->
+        <div class="tab-pane fade show active" id="my-campaigns">
+            <div class="row">
+                {% for campaign in owned_campaigns %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">{{ campaign.name }}</h5>
+                                <span class="badge bg-{{ campaign.status }}">{{ campaign.status|title }}</span>
+                            </div>
+                            <p class="card-text">{{ campaign.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-users"></i> {{ campaign.members|length }}/{{ campaign.max_players }} Players
+                                </small>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('campaign_details', campaign_id=campaign.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <button class="btn btn-warning" onclick="editCampaign({{ campaign.id }})">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        You haven't created any campaigns yet. Click the "Create Campaign" button to get started!
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Campaigns I'm Participating In -->
+        <div class="tab-pane fade" id="participating">
+            <div class="row">
+                {% for campaign in participating_campaigns %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">{{ campaign.name }}</h5>
+                                <span class="badge bg-{{ campaign.status }}">{{ campaign.status|title }}</span>
+                            </div>
+                            <p class="card-text">{{ campaign.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="fas fa-user"></i> GM: {{ campaign.owner.username }}
+                                </small>
+                                <a href="{{ url_for('campaign_details', campaign_id=campaign.id) }}" class="btn btn-primary">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        You're not participating in any campaigns. Check out the available campaigns below!
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Available Campaigns -->
+        <div class="tab-pane fade" id="available">
+            <div class="row">
+                {% for campaign in available_campaigns %}
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="card-title">{{ campaign.name }}</h5>
+                                <span class="badge bg-{{ campaign.status }}">{{ campaign.status|title }}</span>
+                            </div>
+                            <p class="card-text">{{ campaign.description }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">
+                                        <i class="fas fa-user"></i> GM: {{ campaign.owner.username }}
+                                    </small>
+                                    <br>
+                                    <small class="text-muted">
+                                        <i class="fas fa-users"></i> {{ campaign.members|length }}/{{ campaign.max_players }} Players
+                                    </small>
+                                </div>
+                                <div class="btn-group">
+                                    <a href="{{ url_for('campaign_details', campaign_id=campaign.id) }}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    {% if campaign.members|length < campaign.max_players %}
+                                    <button class="btn btn-success" onclick="joinCampaign({{ campaign.id }})">
+                                        <i class="fas fa-sign-in-alt"></i> Join
+                                    </button>
+                                    {% else %}
+                                    <button class="btn btn-secondary" disabled>
+                                        <i class="fas fa-users-slash"></i> Full
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        No campaigns are currently available to join.
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Campaign Modal -->
+<div class="modal fade" id="createCampaignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createCampaignForm">
+                    <div class="mb-3">
+                        <label for="campaignName" class="form-label">Campaign Name</label>
+                        <input type="text" class="form-control" id="campaignName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="campaignDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="campaignDescription" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="campaignSetting" class="form-label">Setting</label>
+                        <input type="text" class="form-control" id="campaignSetting" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="powerLevel" class="form-label">Starting Power Level</label>
+                        <select class="form-control" id="powerLevel" required>
+                            <option value="Novice">Novice</option>
+                            <option value="Seasoned">Seasoned</option>
+                            <option value="Veteran">Veteran</option>
+                            <option value="Heroic">Heroic</option>
+                            <option value="Legendary">Legendary</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="maxPlayers" class="form-label">Maximum Players</label>
+                        <input type="number" class="form-control" id="maxPlayers" min="1" max="10" value="4" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">House Rules</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="benniesPerSession">
+                            <label class="form-check-label" for="benniesPerSession">
+                                Extra Bennies per Session
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="multipleLanguages">
+                            <label class="form-check-label" for="multipleLanguages">
+                                Multiple Languages Allowed
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="freeEdge">
+                            <label class="form-check-label" for="freeEdge">
+                                Free Starting Edge
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createCampaign()">Create Campaign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Join Campaign Modal -->
+<div class="modal fade" id="joinCampaignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Join Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="joinCampaignForm">
+                    <input type="hidden" id="joinCampaignId">
+                    <div class="mb-3">
+                        <label for="characterSelect" class="form-label">Select Character</label>
+                        <select class="form-control" id="characterSelect" required>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="window.location.href='{{ url_for('character_creation') }}'">
+                            <i class="fas fa-plus"></i> Create New Character
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" onclick="submitJoinCampaign()">Join Campaign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createCampaign() {
+    const form = document.getElementById('createCampaignForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const houseRules = {
+        extra_bennies: document.getElementById('benniesPerSession').checked,
+        multiple_languages: document.getElementById('multipleLanguages').checked,
+        free_edge: document.getElementById('freeEdge').checked
+    };
+
+    const data = {
+        name: document.getElementById('campaignName').value,
+        setting: document.getElementById('campaignSetting').value,
+        power_level: document.getElementById('powerLevel').value,
+        max_players: parseInt(document.getElementById('maxPlayers').value),
+        description: document.getElementById('campaignDescription').value,
+        house_rules: JSON.stringify(houseRules)
+    };
+
+    fetch('/create_campaign', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error creating campaign');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating campaign');
+    });
+}
+
+function joinCampaign(campaignId) {
+    document.getElementById('joinCampaignId').value = campaignId;
+    
+    // Fetch available characters
+    fetch(`/campaign/${campaignId}/select-character`)
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('characterSelect');
+            select.innerHTML = ''; // Clear existing options
+            
+            if (data.characters.length === 0) {
+                select.innerHTML = '<option value="">No available characters. Create one first!</option>';
+            } else {
+                data.characters.forEach(character => {
+                    const option = document.createElement('option');
+                    option.value = character.id;
+                    option.textContent = `${character.name} (${character.rank})`;
+                    select.appendChild(option);
+                });
+            }
+            
+            // Show the modal
+            new bootstrap.Modal(document.getElementById('joinCampaignModal')).show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading characters');
+        });
+}
+
+function submitJoinCampaign() {
+    const campaignId = document.getElementById('joinCampaignId').value;
+    const characterId = document.getElementById('characterSelect').value;
+    
+    if (!characterId) {
+        alert('Please select a character or create a new one.');
+        return;
+    }
+
+    const data = new FormData();
+    data.append('character_id', characterId);
+
+    fetch(`/campaign/${campaignId}/join`, {
+        method: 'POST',
+        body: data
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error joining campaign');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error joining campaign');
+    });
+}
+</script>
+{% endblock %}

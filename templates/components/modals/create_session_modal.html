@@ -1,0 +1,101 @@
+<!-- Create Session Modal -->
+<div class="modal fade" id="createSessionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New Session</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createSessionForm">
+                    <div class="mb-3">
+                        <label for="sessionTitle" class="form-label">Session Title</label>
+                        <input type="text" class="form-control" id="sessionTitle" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sessionDate" class="form-label">Session Date</label>
+                        <input type="datetime-local" class="form-control" id="sessionDate" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sessionDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="sessionDescription" rows="4" 
+                                placeholder="What's planned for this session?"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="sessionLocation" class="form-label">Location</label>
+                        <select class="form-select" id="sessionLocation">
+                            <option value="online">Online</option>
+                            <option value="in-person">In Person</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="locationDetailsDiv" style="display: none;">
+                        <label for="locationDetails" class="form-label">Location Details</label>
+                        <input type="text" class="form-control" id="locationDetails" 
+                               placeholder="Address or online meeting link">
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="notifyPlayers" checked>
+                            <label class="form-check-label" for="notifyPlayers">
+                                Notify players about this session
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="createSession()">Create Session</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('sessionLocation').addEventListener('change', function() {
+    const locationDetailsDiv = document.getElementById('locationDetailsDiv');
+    locationDetailsDiv.style.display = this.value === 'in-person' ? 'block' : 'none';
+});
+
+function createSession() {
+    const form = document.getElementById('createSessionForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const data = {
+        title: document.getElementById('sessionTitle').value,
+        date: document.getElementById('sessionDate').value,
+        description: document.getElementById('sessionDescription').value,
+        location: document.getElementById('sessionLocation').value,
+        location_details: document.getElementById('locationDetails').value,
+        notify_players: document.getElementById('notifyPlayers').checked
+    };
+
+    fetch(`/campaign/{{ campaign.id }}/create_session`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error creating session');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating session');
+    });
+}
+</script>

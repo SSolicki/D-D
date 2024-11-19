@@ -1,0 +1,99 @@
+<!-- Create Map Modal -->
+<div class="modal fade" id="createMapModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Add New Map</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createMapForm">
+                    <div class="mb-3">
+                        <label for="mapName" class="form-label">Map Name</label>
+                        <input type="text" class="form-control" id="mapName" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="mapDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="mapDescription" rows="3"></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="mapType" class="form-label">Map Type</label>
+                        <select class="form-select" id="mapType" required>
+                            <option value="battle">Battle Map</option>
+                            <option value="region">Region Map</option>
+                            <option value="world">World Map</option>
+                            <option value="building">Building/Dungeon</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="mapImage" class="form-label">Map Image</label>
+                        <input type="file" class="form-control" id="mapImage" 
+                               accept="image/*" required>
+                        <div class="form-text">Supported formats: PNG, JPG, JPEG. Max size: 5MB</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="gridSize" class="form-label">Grid Size (Optional)</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="gridSize" 
+                                   placeholder="e.g., 30">
+                            <span class="input-group-text">pixels</span>
+                        </div>
+                        <div class="form-text">Leave empty for maps without grid</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="isPrivate">
+                            <label class="form-check-label" for="isPrivate">
+                                Keep map private (GM only)
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="uploadMap()">Upload Map</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function uploadMap() {
+    const form = document.getElementById('createMapForm');
+    if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('name', document.getElementById('mapName').value);
+    formData.append('description', document.getElementById('mapDescription').value);
+    formData.append('type', document.getElementById('mapType').value);
+    formData.append('image', document.getElementById('mapImage').files[0]);
+    formData.append('grid_size', document.getElementById('gridSize').value);
+    formData.append('is_private', document.getElementById('isPrivate').checked);
+
+    fetch(`/campaign/{{ campaign.id }}/upload_map`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error uploading map');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error uploading map');
+    });
+}
+</script>

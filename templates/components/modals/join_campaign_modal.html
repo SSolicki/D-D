@@ -1,0 +1,67 @@
+<!-- Join Campaign Modal -->
+<div class="modal fade" id="joinCampaignModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content bg-secondary">
+            <div class="modal-header">
+                <h5 class="modal-title">Join Campaign</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="joinCampaignForm">
+                    <div class="mb-3">
+                        <label for="characterSelect" class="form-label">Select Character</label>
+                        <select class="form-select" id="characterSelect" required>
+                            <!-- Options will be populated dynamically -->
+                        </select>
+                        <div class="form-text">Select a character to join the campaign with.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('character_creation') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-plus"></i> Create New Character
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-success" onclick="submitJoinCampaign()">Join Campaign</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function submitJoinCampaign() {
+    const characterId = document.getElementById('characterSelect').value;
+    
+    if (!characterId) {
+        alert('Please select a character or create a new one.');
+        return;
+    }
+
+    fetch(`/campaign/{{ campaign.id }}/join`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            character_id: characterId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            alert(data.message || 'Error joining campaign');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error joining campaign');
+    });
+}
+</script>

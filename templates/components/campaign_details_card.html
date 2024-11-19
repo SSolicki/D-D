@@ -1,0 +1,75 @@
+<!-- Campaign Details Card -->
+<div class="card bg-secondary mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Campaign Details</h5>
+        <span class="badge bg-{{ campaign.status }}">{{ campaign.status|title }}</span>
+    </div>
+    <div class="card-body">
+        <p class="card-text">{{ campaign.description }}</p>
+        <hr>
+        <div class="mb-3">
+            <strong>Setting:</strong> {{ campaign.setting }}<br>
+            <strong>Power Level:</strong> {{ campaign.power_level }}<br>
+            <strong>Players:</strong> {{ campaign.members|length }}/{{ campaign.max_players }}
+        </div>
+        
+        <h6>House Rules</h6>
+        <ul class="list-unstyled">
+            {% if campaign.house_rules.extra_bennies %}
+            <li><i class="fas fa-check text-success"></i> Extra Bennies per Session</li>
+            {% endif %}
+            {% if campaign.house_rules.multiple_languages %}
+            <li><i class="fas fa-check text-success"></i> Multiple Languages Allowed</li>
+            {% endif %}
+            {% if campaign.house_rules.free_edge %}
+            <li><i class="fas fa-check text-success"></i> Free Edge at Character Creation</li>
+            {% endif %}
+        </ul>
+        
+        {% if current_user.id == campaign.owner_id %}
+        <hr>
+        <div class="d-grid gap-2">
+            {% if campaign.status == 'draft' %}
+            <button class="btn btn-success" onclick="updateCampaignStatus('active')">
+                <i class="fas fa-play"></i> Start Campaign
+            </button>
+            {% elif campaign.status == 'active' %}
+            <button class="btn btn-warning" onclick="updateCampaignStatus('completed')">
+                <i class="fas fa-flag-checkered"></i> Complete Campaign
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function updateCampaignStatus(newStatus) {
+    const confirmMessages = {
+        'active': 'Are you sure you want to start this campaign? This will lock in the current players and settings.',
+        'completed': 'Are you sure you want to mark this campaign as completed? This will archive the campaign.'
+    };
+    
+    if (confirm(confirmMessages[newStatus])) {
+        fetch(`/campaign/{{ campaign.id }}/update-status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error updating campaign status');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error updating campaign status');
+        });
+    }
+}
+</script>

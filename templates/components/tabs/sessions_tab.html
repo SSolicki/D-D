@@ -1,0 +1,33 @@
+<!-- Sessions Tab -->
+<div class="tab-pane fade show active" id="sessions">
+    <div class="card bg-secondary">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Game Sessions</h5>
+                {% if current_user.id == campaign.game_master_id %}
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" 
+                        data-bs-target="#createSessionModal">
+                    <i class="fas fa-plus"></i> New Session
+                </button>
+                {% endif %}
+            </div>
+            
+            <div class="list-group">
+                {% for session in campaign.sessions %}
+                <div class="list-group-item bg-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-1">{{ session.title }}</h6>
+                        <small>{{ session.date }}</small>
+                    </div>
+                    <p class="mb-1">{{ session.description }}</p>
+                    {% if session.notes %}
+                    <small class="text-muted">
+                        <i class="fas fa-sticky-note"></i> Has session notes
+                    </small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>

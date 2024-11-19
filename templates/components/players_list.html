@@ -1,0 +1,35 @@
+<!-- Active Players Card -->
+<div class="card bg-secondary mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Active Players</h5>
+        {% if current_user.id == campaign.game_master_id %}
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#invitePlayerModal">
+            <i class="fas fa-user-plus"></i>
+        </button>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        <div class="list-group list-group-flush">
+            {% for player in campaign.players %}
+            <div class="list-group-item bg-dark d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>{{ player.username }}</strong>
+                    {% if player.character %}
+                    <br>
+                    <small class="text-muted">
+                        Playing as: {{ player.character.name }}
+                        ({{ player.character.rank }})
+                    </small>
+                    {% endif %}
+                </div>
+                {% if current_user.id == campaign.game_master_id %}
+                <button class="btn btn-sm btn-outline-danger" 
+                        onclick="removePlayer({{ player.id }})">
+                    <i class="fas fa-user-minus"></i>
+                </button>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
