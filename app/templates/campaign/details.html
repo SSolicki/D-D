@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}{{ campaign.name }} - Campaign Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Campaign Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1>{{ campaign.name }}</h1>
+            <p class="text-muted mb-0">{{ campaign.setting }} - {{ campaign.power_level }}</p>
+        </div>
+        <div class="btn-group">
+            {% if campaign.owner_id == current_user.id %}
+            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#editCampaignModal">
+                <i class="fas fa-edit"></i> Edit Campaign
+            </button>
+            {% elif current_user in campaign.members %}
+            <button class="btn btn-danger" onclick="leaveCampaign({{ campaign.id }})">
+                <i class="fas fa-sign-out-alt"></i> Leave Campaign
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Column - Campaign Info -->
+        <div class="col-md-4">
+            <!-- Campaign Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Campaign Details</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">{{ campaign.description }}</p>
+                    <hr>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge bg-{{ campaign.status }}">{{ campaign.status|title }}</span>
+                        </dd>
+                        <dt class="col-sm-4">Game Master</dt>
+                        <dd class="col-sm-8">{{ campaign.owner.username }}</dd>
+                        <dt class="col-sm-4">Players</dt>
+                        <dd class="col-sm-8">{{ campaign.members|length }}/{{ campaign.max_players }}</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Players List -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Players</h5>
+                    {% if campaign.owner_id == current_user.id and campaign.members|length < campaign.max_players %}
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#invitePlayerModal">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for member in campaign.members %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ member.username }}
+                            {% if member.id == campaign.owner_id %}
+                            <span class="badge bg-primary">GM</span>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Campaign Content -->
+        <div class="col-md-8">
+            <!-- Campaign Notes -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Campaign Notes</h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addNoteModal">
+                        <i class="fas fa-plus"></i> Add Note
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if campaign.notes %}
+                    <div class="list-group">
+                        {% for note in campaign.notes %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h6 class="mb-1">{{ note.title }}</h6>
+                                <small class="text-muted">{{ note.created_at|datetime }}</small>
+                            </div>
+                            <p class="mb-1">{{ note.content }}</p>
+                            <small class="text-muted">By {{ note.author.username }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">No notes yet. Add one to get started!</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Campaign Map -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Campaign Map</h5>
+                </div>
+                <div class="card-body">
+                    <div id="campaign-map" style="height: 400px;">
+                        <!-- Map will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% include 'campaign/components/modals/edit_campaign_modal.html' %}
+{% include 'campaign/components/modals/add_note_modal.html' %}
+{% include 'campaign/components/modals/invite_player_modal.html' %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function leaveCampaign(campaignId) {
+    if (confirm('Are you sure you want to leave this campaign?')) {
+        fetch(`{{ url_for('campaign.leave', campaign_id=campaign.id) }}`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{{ url_for('campaign.index') }}';
+            } else {
+                showError(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred while leaving the campaign.');
+        });
+    }
+}
+
+function showError(message) {
+    const errorAlert = document.createElement('div');
+    errorAlert.className = 'alert alert-danger alert-dismissible fade show';
+    errorAlert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container').prepend(errorAlert);
+}
+
+// Initialize campaign map
+document.addEventListener('DOMContentLoaded', function() {
+    // Map initialization code here
+});
+</script>
+{% endblock %}

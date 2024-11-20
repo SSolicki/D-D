@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}D&D Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    {% if current_user.is_authenticated %}
+        <h1 class="text-center mb-4">Welcome back, {{ current_user.username }}!</h1>
+        
+        <div class="row g-4">
+            <!-- Character Management -->
+            <div class="col-md-6">
+                <div class="card bg-secondary h-100">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">Characters</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Create and manage your D&D characters.</p>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('character.create') }}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle"></i> Create Character
+                            </a>
+                            <a href="{{ url_for('character.list_characters') }}" class="btn btn-outline-light">
+                                <i class="fas fa-users"></i> View Characters
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Management -->
+            <div class="col-md-6">
+                <div class="card bg-secondary h-100">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">Campaigns</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Start a new adventure or join existing campaigns.</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                                <i class="fas fa-dungeon"></i> Create Campaign
+                            </button>
+                            <a href="{{ url_for('campaign.index') }}" class="btn btn-outline-light">
+                                <i class="fas fa-dice-d20"></i> View Campaigns
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-md-4">
+                                <h4>Characters</h4>
+                                <p class="h2 mb-0">{{ user_stats.character_count }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4>Active Campaigns</h4>
+                                <p class="h2 mb-0">{{ user_stats.campaign_count }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <h4>DM Campaigns</h4>
+                                <p class="h2 mb-0">{{ user_stats.dm_campaign_count }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center">
+            <h1 class="display-4 mb-4">Welcome to D&D Campaign Manager</h1>
+            <p class="lead mb-4">Your ultimate tool for managing D&D campaigns, characters, and more!</p>
+            
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <div class="card bg-secondary">
+                        <div class="card-body">
+                            <h2 class="card-title">Get Started</h2>
+                            <p class="card-text">Join our community of D&D enthusiasts and start managing your campaigns today!</p>
+                            <div class="d-grid gap-3">
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-sign-in-alt"></i> Login
+                                </a>
+                                <a href="{{ url_for('auth.register') }}" class="btn btn-success btn-lg">
+                                    <i class="fas fa-user-plus"></i> Register
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

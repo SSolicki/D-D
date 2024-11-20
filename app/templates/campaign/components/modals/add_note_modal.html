@@ -1,0 +1,65 @@
+<!-- Add Note Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add Campaign Note</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNoteForm">
+                    {{ form.csrf_token }}
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Content</label>
+                        <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="note_type" class="form-label">Note Type</label>
+                        <select class="form-control" id="note_type" name="note_type">
+                            <option value="general">General</option>
+                            <option value="quest">Quest</option>
+                            <option value="npc">NPC</option>
+                            <option value="location">Location</option>
+                            <option value="lore">Lore</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="addNote()">Add Note</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function addNote() {
+    const form = document.getElementById('addNoteForm');
+    const formData = new FormData(form);
+    
+    fetch(`{{ url_for('campaign.add_note', campaign_id=campaign.id) }}`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            showError(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('An error occurred while adding the note.');
+    });
+}
+</script>

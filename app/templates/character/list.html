@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}My Characters{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-between align-items-center mb-4">
+        <div class="col">
+            <h1>My Characters</h1>
+        </div>
+        <div class="col-auto">
+            <a href="{{ url_for('character.create') }}" class="btn btn-primary">Create New Character</a>
+        </div>
+    </div>
+
+    {% if characters %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        {% for character in characters %}
+        <div class="col">
+            <div class="card h-100 bg-secondary">
+                <div class="card-body">
+                    <h5 class="card-title">{{ character.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Level {{ character.level }} {{ character.race }} {{ character.character_class }}</h6>
+                    
+                    {% if character.campaign %}
+                    <p class="card-text">
+                        <small>Campaign: {{ character.campaign.name }}</small>
+                    </p>
+                    {% else %}
+                    <p class="card-text">
+                        <small class="text-muted">Not in a campaign</small>
+                    </p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <a href="{{ url_for('character.view', character_id=character.id) }}" 
+                           class="btn btn-primary btn-sm">View</a>
+                        <a href="{{ url_for('character.edit', character_id=character.id) }}" 
+                           class="btn btn-secondary btn-sm">Edit</a>
+                        <a href="{{ url_for('character.delete', character_id=character.id) }}" 
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Are you sure you want to delete {{ character.name }}?')">
+                            Delete
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p>You haven't created any characters yet.</p>
+        <a href="{{ url_for('character.create') }}" class="btn btn-primary">Create Your First Character</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

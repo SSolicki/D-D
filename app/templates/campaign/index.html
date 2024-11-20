@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Campaign List Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Campaigns</h1>
+        {% if current_user.is_authenticated %}
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+            <i class="fas fa-plus"></i> Create Campaign
+        </button>
+        {% endif %}
+    </div>
+
+    <!-- Campaign Cards Grid -->
+    <div class="row g-4">
+        {% for campaign in campaigns %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ campaign.name }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="fas fa-user"></i> {{ campaign.owner.username }}
+                        {% if campaign.next_session %}
+                        <span class="ms-2">
+                            <i class="fas fa-calendar"></i> {{ campaign.next_session.strftime('%Y-%m-%d %H:%M') }}
+                        </span>
+                        {% endif %}
+                    </h6>
+                    <p class="card-text">{{ campaign.description }}</p>
+                    <div class="campaign-details mb-3">
+                        <span class="badge bg-primary">{{ campaign.power_level }}</span>
+                        {% if campaign.setting %}
+                        <span class="badge bg-secondary">{{ campaign.setting }}</span>
+                        {% endif %}
+                        <span class="badge bg-info">
+                            <i class="fas fa-users"></i> {{ campaign.members.count() }}/6
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('campaign.view', campaign_id=campaign.id) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-book-open"></i> View Details
+                        </a>
+                        <div class="btn-group">
+                            {% if current_user.is_authenticated %}
+                                {% if campaign.owner_id == current_user.id %}
+                                <button type="button" class="btn btn-outline-secondary" 
+                                        onclick="editCampaign({{ campaign.id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                {% elif campaign.is_member(current_user) %}
+                                <button type="button" class="btn btn-outline-danger" 
+                                        onclick="leaveCampaign({{ campaign.id }})">
+                                    <i class="fas fa-sign-out-alt"></i> Leave
+                                </button>
+                                {% else %}
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="joinCampaign({{ campaign.id }})">
+                                    <i class="fas fa-sign-in-alt"></i> Join
+                                </button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create Campaign Modal -->
+{% include 'campaign/components/modals/create_campaign_modal.html' %}
+
+<!-- JavaScript for Campaign Actions -->
+<script>
+function joinCampaign(campaignId) {
+    fetch(`/campaign/${campaignId}/join`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.reload();
+        } else {
+            showError(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('An error occurred while joining the campaign.');
+    });
+}
+
+function leaveCampaign(campaignId) {
+    if (confirm('Are you sure you want to leave this campaign?')) {
+        fetch(`/campaign/${campaignId}/leave`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                showError(data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showError('An error occurred while leaving the campaign.');
+        });
+    }
+}
+
+function editCampaign(campaignId) {
+    // Load campaign data and show edit modal
+    fetch(`/campaign/${campaignId}/edit`, {
+        method: 'GET',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Populate form fields
+            document.getElementById('edit-name').value = data.campaign.name;
+            document.getElementById('edit-description').value = data.campaign.description;
+            document.getElementById('edit-setting').value = data.campaign.setting;
+            document.getElementById('edit-power-level').value = data.campaign.power_level;
+            document.getElementById('edit-house-rules').value = data.campaign.house_rules;
+            
+            // Show modal
+            const editModal = new bootstrap.Modal(document.getElementById('editCampaignModal'));
+            editModal.show();
+        } else {
+            showError(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('An error occurred while loading campaign data.');
+    });
+}
+
+// Error handling function
+function showError(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'alert alert-danger alert-dismissible fade show';
+    errorDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.querySelector('.container').insertBefore(errorDiv, document.querySelector('.row'));
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        errorDiv.remove();
+    }, 5000);
+}
+</script>
+{% endblock %}

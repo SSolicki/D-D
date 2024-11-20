@@ -1,0 +1,10 @@
+Generic single-database configuration for Flask-Migrate.
+
+To create a new migration:
+flask db migrate -m "Description of changes"
+
+To apply migrations:
+flask db upgrade
+
+To rollback migrations:
+flask db downgrade

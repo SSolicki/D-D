@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}{{ character.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-8">
+            <h1>{{ character.name }}</h1>
+            <div class="card bg-secondary mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Character Details</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Race:</strong> {{ character.race }}</p>
+                            <p><strong>Class:</strong> {{ character.character_class }}</p>
+                            <p><strong>Level:</strong> {{ character.level }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Background:</strong> {{ character.background }}</p>
+                            <p><strong>Alignment:</strong> {{ character.alignment }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaign Information -->
+            <div class="card bg-secondary mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Campaign Status</h5>
+                    {% if character.campaign %}
+                        <p>Currently in campaign: <strong>{{ character.campaign.name }}</strong></p>
+                        <p>{{ character.campaign.description }}</p>
+                        <a href="{{ url_for('character.leave_campaign', character_id=character.id) }}" 
+                           class="btn btn-warning">Leave Campaign</a>
+                    {% else %}
+                        <p>Not currently in a campaign</p>
+                        {% if available_campaigns %}
+                            <h6 class="mt-3">Join a Campaign:</h6>
+                            <div class="list-group">
+                                {% for campaign in available_campaigns %}
+                                <a href="{{ url_for('character.join_campaign', character_id=character.id, campaign_id=campaign.id) }}" 
+                                   class="list-group-item list-group-item-action bg-dark">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ campaign.name }}</h6>
+                                        <small>{% if campaign.dm_id == current_user.id %}DM{% else %}Player{% endif %}</small>
+                                    </div>
+                                    <p class="mb-1">{{ campaign.description }}</p>
+                                </a>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p>No campaigns available to join.</p>
+                            <a href="{{ url_for('campaign.create') }}" class="btn btn-primary">Create Campaign</a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-secondary mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('character.edit', character_id=character.id) }}" 
+                           class="btn btn-primary">Edit Character</a>
+                        <a href="{{ url_for('character.delete', character_id=character.id) }}" 
+                           class="btn btn-danger" 
+                           onclick="return confirm('Are you sure you want to delete this character?')">
+                            Delete Character
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
