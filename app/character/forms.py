@@ -11,66 +11,74 @@ class CharacterForm(FlaskForm):
         DataRequired(),
         Length(max=50, message='Race must be less than 50 characters')
     ])
-    character_class = StringField('Class', validators=[
+    
+    # In Savage Worlds, we don't have classes but archetypes/concepts
+    character_concept = StringField('Character Concept', validators=[
         DataRequired(),
-        Length(max=50, message='Class must be less than 50 characters')
-    ])
-    level = IntegerField('Level', validators=[
-        DataRequired(),
-        NumberRange(min=1, max=20, message='Level must be between 1 and 20')
-    ], default=1)
-    background = StringField('Background', validators=[
-        Optional(),
-        Length(max=100, message='Background must be less than 100 characters')
-    ])
-    alignment = SelectField('Alignment', choices=[
-        ('LG', 'Lawful Good'),
-        ('NG', 'Neutral Good'),
-        ('CG', 'Chaotic Good'),
-        ('LN', 'Lawful Neutral'),
-        ('N', 'True Neutral'),
-        ('CN', 'Chaotic Neutral'),
-        ('LE', 'Lawful Evil'),
-        ('NE', 'Neutral Evil'),
-        ('CE', 'Chaotic Evil')
+        Length(max=100, message='Concept must be less than 100 characters')
     ])
     
-    # Ability Scores
-    strength = IntegerField('Strength', validators=[
-        DataRequired(),
-        NumberRange(min=3, max=20, message='Strength must be between 3 and 20')
-    ], default=10)
-    dexterity = IntegerField('Dexterity', validators=[
-        DataRequired(),
-        NumberRange(min=3, max=20, message='Dexterity must be between 3 and 20')
-    ], default=10)
-    constitution = IntegerField('Constitution', validators=[
-        DataRequired(),
-        NumberRange(min=3, max=20, message='Constitution must be between 3 and 20')
-    ], default=10)
-    intelligence = IntegerField('Intelligence', validators=[
-        DataRequired(),
-        NumberRange(min=3, max=20, message='Intelligence must be between 3 and 20')
-    ], default=10)
-    wisdom = IntegerField('Wisdom', validators=[
-        DataRequired(),
-        NumberRange(min=3, max=20, message='Wisdom must be between 3 and 20')
-    ], default=10)
-    charisma = IntegerField('Charisma', validators=[
-        DataRequired(),
-        NumberRange(min=3, max=20, message='Charisma must be between 3 and 20')
-    ], default=10)
+    # Savage Worlds uses ranks instead of levels
+    rank = SelectField('Rank', choices=[
+        ('Novice', 'Novice'),
+        ('Seasoned', 'Seasoned'),
+        ('Veteran', 'Veteran'),
+        ('Heroic', 'Heroic'),
+        ('Legendary', 'Legendary')
+    ], validators=[DataRequired()])
     
-    # Equipment
-    equipment = TextAreaField('Equipment', validators=[Optional()])
-    gold = IntegerField('Gold Pieces', validators=[Optional(), NumberRange(min=0)], default=0)
+    # Attributes in Savage Worlds use die types
+    agility = SelectField('Agility', choices=[
+        ('d4', 'd4'),
+        ('d6', 'd6'),
+        ('d8', 'd8'),
+        ('d10', 'd10'),
+        ('d12', 'd12')
+    ], validators=[DataRequired()])
+    
+    smarts = SelectField('Smarts', choices=[
+        ('d4', 'd4'),
+        ('d6', 'd6'),
+        ('d8', 'd8'),
+        ('d10', 'd10'),
+        ('d12', 'd12')
+    ], validators=[DataRequired()])
+    
+    spirit = SelectField('Spirit', choices=[
+        ('d4', 'd4'),
+        ('d6', 'd6'),
+        ('d8', 'd8'),
+        ('d10', 'd10'),
+        ('d12', 'd12')
+    ], validators=[DataRequired()])
+    
+    strength = SelectField('Strength', choices=[
+        ('d4', 'd4'),
+        ('d6', 'd6'),
+        ('d8', 'd8'),
+        ('d10', 'd10'),
+        ('d12', 'd12')
+    ], validators=[DataRequired()])
+    
+    vigor = SelectField('Vigor', choices=[
+        ('d4', 'd4'),
+        ('d6', 'd6'),
+        ('d8', 'd8'),
+        ('d10', 'd10'),
+        ('d12', 'd12')
+    ], validators=[DataRequired()])
     
     # Character Details
-    personality = TextAreaField('Personality Traits', validators=[Optional()])
-    ideals = TextAreaField('Ideals', validators=[Optional()])
-    bonds = TextAreaField('Bonds', validators=[Optional()])
-    flaws = TextAreaField('Flaws', validators=[Optional()])
-    backstory = TextAreaField('Backstory', validators=[Optional()])
+    hindrances = TextAreaField('Hindrances', validators=[Optional()])
+    edges = TextAreaField('Edges', validators=[Optional()])
+    equipment = TextAreaField('Equipment', validators=[Optional()])
+    
+    # Money in Savage Worlds
+    money = IntegerField('Money', validators=[Optional(), NumberRange(min=0)], default=500)
+    
+    # Additional Character Details
+    background = TextAreaField('Background', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional()])
     
     submit = SubmitField('Create Character')
 

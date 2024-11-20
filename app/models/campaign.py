@@ -30,7 +30,7 @@ class Campaign(db.Model):
     next_session = db.Column(db.DateTime)
     
     # Relationships
-    characters = db.relationship('Character', lazy='dynamic')
+    characters = db.relationship('Character', back_populates='campaign', lazy='dynamic')
     notes = db.relationship('CampaignNote', backref='campaign', lazy='dynamic',
                           cascade='all, delete-orphan')
     maps = db.relationship('Map', backref='campaign', lazy='dynamic',

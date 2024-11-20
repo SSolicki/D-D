@@ -15,21 +15,26 @@ def list_characters():
 @login_required
 def create():
     form = CharacterForm()
+    print("Form Data:", request.form)  # Debug print
     if form.validate_on_submit():
         try:
+            print("Form validated successfully")  # Debug print
             character = Character(
                 name=form.name.data,
                 race=form.race.data,
-                character_class=form.character_class.data,
-                level=form.level.data,
+                character_concept=form.character_concept.data,
+                rank=form.rank.data,
+                agility=form.agility.data,
+                smarts=form.smarts.data,
+                spirit=form.spirit.data,
+                strength=form.strength.data,
+                vigor=form.vigor.data,
+                hindrances=form.hindrances.data,
+                edges=form.edges.data,
+                equipment=form.equipment.data,
+                money=form.money.data,
                 background=form.background.data,
-                alignment=form.alignment.data,
-                strength=str(form.strength.data),
-                dexterity=str(form.dexterity.data),
-                constitution=str(form.constitution.data),
-                intelligence=str(form.intelligence.data),
-                wisdom=str(form.wisdom.data),
-                charisma=str(form.charisma.data),
+                notes=form.notes.data,
                 user_id=current_user.id
             )
             db.session.add(character)
@@ -38,13 +43,18 @@ def create():
             return redirect(url_for('character.list_characters'))
         except Exception as e:
             db.session.rollback()
+            print("Error creating character:", str(e))  # Debug print
             flash('Error creating character: ' + str(e), 'danger')
             return render_template('character/create.html', form=form)
     
-    if form.errors:
+    if not form.validate():
+        print("Form validation failed")  # Debug print
+        print("Form errors:", form.errors)  # Debug print
+        flash('Form validation failed. Please check the following errors:', 'danger')
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'{field}: {error}', 'danger')
+        return render_template('character/create.html', form=form)
     
     return render_template('character/create.html', form=form)
 
@@ -116,10 +126,19 @@ def edit(character_id):
     if form.validate_on_submit():
         character.name = form.name.data
         character.race = form.race.data
-        character.character_class = form.character_class.data
-        character.level = form.level.data
+        character.character_concept = form.character_concept.data
+        character.rank = form.rank.data
+        character.agility = form.agility.data
+        character.smarts = form.smarts.data
+        character.spirit = form.spirit.data
+        character.strength = form.strength.data
+        character.vigor = form.vigor.data
+        character.hindrances = form.hindrances.data
+        character.edges = form.edges.data
+        character.equipment = form.equipment.data
+        character.money = form.money.data
         character.background = form.background.data
-        character.alignment = form.alignment.data
+        character.notes = form.notes.data
         db.session.commit()
         flash('Your character has been updated!', 'success')
         return redirect(url_for('character.view', character_id=character.id))

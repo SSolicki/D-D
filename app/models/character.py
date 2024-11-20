@@ -12,68 +12,33 @@ class Character(db.Model):
     # Basic Info
     name = db.Column(db.String(100), nullable=False)
     race = db.Column(db.String(50), nullable=False)
-    character_class = db.Column(db.String(50), nullable=False)
-    level = db.Column(db.Integer, default=1)
-    background = db.Column(db.String(100))
-    alignment = db.Column(db.String(20))
+    character_concept = db.Column(db.String(100), nullable=False)
+    rank = db.Column(db.String(20), default='Novice')
     
-    # Ability Scores
-    strength = db.Column(db.String(10), default='10')
-    dexterity = db.Column(db.String(10), default='10')
-    constitution = db.Column(db.String(10), default='10')
-    intelligence = db.Column(db.String(10), default='10')
-    wisdom = db.Column(db.String(10), default='10')
-    charisma = db.Column(db.String(10), default='10')
+    # Attributes (Savage Worlds uses die types)
+    agility = db.Column(db.String(3), default='d4')
+    smarts = db.Column(db.String(3), default='d4')
+    spirit = db.Column(db.String(3), default='d4')
+    strength = db.Column(db.String(3), default='d4')
+    vigor = db.Column(db.String(3), default='d4')
     
-    # Game Stats
-    experience_points = db.Column(db.Integer, default=0)
-    hit_points = db.Column(db.Integer)
-    armor_class = db.Column(db.Integer)
-    initiative = db.Column(db.Integer)
-    speed = db.Column(db.Integer, default=30)
-    
-    # Equipment and Resources
+    # Character Details
+    hindrances = db.Column(db.Text)
+    edges = db.Column(db.Text)
     equipment = db.Column(db.Text)
-    gold = db.Column(db.Integer, default=0)
+    money = db.Column(db.Integer, default=500)
+    background = db.Column(db.Text)
+    notes = db.Column(db.Text)
     
     # Metadata
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    campaign = db.relationship('Campaign', backref=db.backref('characters', lazy='dynamic'))
+    campaign = db.relationship('Campaign', back_populates='characters')
     
     def __repr__(self):
         return f'<Character {self.name}>'
-    
-    def calculate_modifier(self, score):
-        """Calculate ability score modifier."""
-        score = int(score)
-        return (score - 10) // 2
-    
-    def calculate_proficiency_bonus(self):
-        """Calculate proficiency bonus based on level."""
-        return (self.level - 1) // 4 + 2
-    
-    def calculate_hit_points(self):
-        """Calculate max hit points."""
-        con_mod = self.calculate_modifier(self.constitution)
-        return (8 + con_mod) + ((self.level - 1) * (5 + con_mod))
-    
-    def calculate_armor_class(self):
-        """Calculate base armor class."""
-        return 10 + self.calculate_modifier(self.dexterity)
-    
-    def calculate_initiative(self):
-        """Calculate initiative modifier."""
-        return self.calculate_modifier(self.dexterity)
-    
-    def save(self):
-        """Save character and calculate derived stats."""
-        self.hit_points = self.calculate_hit_points()
-        self.armor_class = self.calculate_armor_class()
-        self.initiative = self.calculate_initiative()
-        db.session.commit()
 
 # Create indexes for frequently queried fields
 Index('idx_character_user_id', Character.user_id)
