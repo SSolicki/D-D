@@ -9,50 +9,92 @@
     <title>{% block title %}D&D Web App{% endblock %}</title>
 </head>
 <body class="bg-dark text-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-secondary mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 sticky-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">D&D Web App</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+                <i class="fas fa-dragon me-2"></i>D&D Web App
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
+                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" 
+                           href="{{ url_for('main.index') }}">
+                           <i class="fas fa-home me-1"></i>Home
+                        </a>
                     </li>
                     {% if current_user.is_authenticated %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="campaignDropdown" role="button" data-bs-toggle="dropdown">
-                            Campaigns
+                        <a class="nav-link dropdown-toggle {% if 'campaign.' in request.endpoint %}active{% endif %}" 
+                           href="#" id="campaignDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-book me-1"></i>Campaigns
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="campaignDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('campaign.index') }}">My Campaigns</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('campaign.index') }}">
+                                    <i class="fas fa-list me-2"></i>My Campaigns
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createCampaignModal">Create Campaign</button></li>
+                            <li>
+                                <button class="dropdown-item" data-bs-toggle="modal" data-bs-target="#createCampaignModal">
+                                    <i class="fas fa-plus me-2"></i>Create Campaign
+                                </button>
+                            </li>
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="characterDropdown" role="button" data-bs-toggle="dropdown">
-                            Characters
+                        <a class="nav-link dropdown-toggle {% if 'character.' in request.endpoint %}active{% endif %}" 
+                           href="#" id="characterDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-shield me-1"></i>Characters
                         </a>
                         <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="characterDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('character.list_characters') }}">My Characters</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('character.create') }}">Create Character</a></li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('character.list_characters') }}">
+                                    <i class="fas fa-users me-2"></i>My Characters
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('character.create') }}">
+                                    <i class="fas fa-user-plus me-2"></i>Create Character
+                                </a>
+                            </li>
                         </ul>
                     </li>
                     {% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i>{{ current_user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
+                        <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}" 
+                           href="{{ url_for('auth.login') }}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Login
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.register') }}">Register</a>
+                        <a class="nav-link {% if request.endpoint == 'auth.register' %}active{% endif %}" 
+                           href="{{ url_for('auth.register') }}">
+                            <i class="fas fa-user-plus me-1"></i>Register
+                        </a>
                     </li>
                     {% endif %}
                 </ul>

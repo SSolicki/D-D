@@ -15,46 +15,41 @@ def list_characters():
 @login_required
 def create():
     form = CharacterForm()
-    print("Form Data:", request.form)  # Debug print
-    if form.validate_on_submit():
-        try:
-            print("Form validated successfully")  # Debug print
-            character = Character(
-                name=form.name.data,
-                race=form.race.data,
-                character_concept=form.character_concept.data,
-                rank=form.rank.data,
-                agility=form.agility.data,
-                smarts=form.smarts.data,
-                spirit=form.spirit.data,
-                strength=form.strength.data,
-                vigor=form.vigor.data,
-                hindrances=form.hindrances.data,
-                edges=form.edges.data,
-                equipment=form.equipment.data,
-                money=form.money.data,
-                background=form.background.data,
-                notes=form.notes.data,
-                user_id=current_user.id
-            )
-            db.session.add(character)
-            db.session.commit()
-            flash('Your character has been created!', 'success')
-            return redirect(url_for('character.list_characters'))
-        except Exception as e:
-            db.session.rollback()
-            print("Error creating character:", str(e))  # Debug print
-            flash('Error creating character: ' + str(e), 'danger')
-            return render_template('character/create.html', form=form)
-    
-    if not form.validate():
-        print("Form validation failed")  # Debug print
-        print("Form errors:", form.errors)  # Debug print
-        flash('Form validation failed. Please check the following errors:', 'danger')
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(f'{field}: {error}', 'danger')
-        return render_template('character/create.html', form=form)
+    if request.method == 'POST':
+        print("Form Data:", request.form)
+        if form.validate_on_submit():
+            try:
+                character = Character(
+                    name=form.name.data,
+                    race=form.race.data,
+                    character_concept=form.character_concept.data,
+                    rank=form.rank.data,
+                    agility=form.agility.data,
+                    smarts=form.smarts.data,
+                    spirit=form.spirit.data,
+                    strength=form.strength.data,
+                    vigor=form.vigor.data,
+                    hindrances=form.hindrances.data,
+                    edges=form.edges.data,
+                    equipment=form.equipment.data,
+                    money=form.money.data,
+                    background=form.background.data,
+                    notes=form.notes.data,
+                    user_id=current_user.id
+                )
+                db.session.add(character)
+                db.session.commit()
+                flash('Your character has been created!', 'success')
+                return redirect(url_for('character.list_characters'))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating character: {str(e)}', 'danger')
+        else:
+            print("Form validation failed")
+            print("Form errors:", form.errors)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    flash(f'{field}: {error}', 'danger')
     
     return render_template('character/create.html', form=form)
 

@@ -5,8 +5,26 @@
 {% block content %}
 <div class="container mt-4">
     <h1>Create New Character</h1>
-    <form method="POST" action="" class="needs-validation" novalidate>
-        {{ form.hidden_tag() }}
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <form method="POST" action="{{ url_for('character.create') }}" class="character-form">
+        {{ form.csrf_token }}
+        {% if form.csrf_token.errors %}
+            <div class="alert alert-danger">
+                CSRF validation failed. Please try again.
+            </div>
+        {% endif %}
+        
         <div class="card mb-4">
             <div class="card-header">
                 <h4>Basic Information</h4>
@@ -15,33 +33,49 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         {{ form.name.label(class="form-label") }}
-                        {{ form.name(class="form-control") }}
-                        {% for error in form.name.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), required=true) }}
+                        {% if form.name.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.name.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         {{ form.race.label(class="form-label") }}
-                        {{ form.race(class="form-control") }}
-                        {% for error in form.race.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.race(class="form-control" + (" is-invalid" if form.race.errors else ""), required=true) }}
+                        {% if form.race.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.race.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         {{ form.character_concept.label(class="form-label") }}
-                        {{ form.character_concept(class="form-control") }}
-                        {% for error in form.character_concept.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.character_concept(class="form-control" + (" is-invalid" if form.character_concept.errors else ""), required=true) }}
+                        {% if form.character_concept.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.character_concept.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="row g-3 mt-2">
                     <div class="col-md-4">
                         {{ form.rank.label(class="form-label") }}
-                        {{ form.rank(class="form-select") }}
-                        {% for error in form.rank.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.rank(class="form-select" + (" is-invalid" if form.rank.errors else ""), required=true) }}
+                        {% if form.rank.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.rank.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -55,40 +89,60 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         {{ form.agility.label(class="form-label") }}
-                        {{ form.agility(class="form-select") }}
-                        {% for error in form.agility.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.agility(class="form-select" + (" is-invalid" if form.agility.errors else ""), required=true) }}
+                        {% if form.agility.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.agility.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         {{ form.smarts.label(class="form-label") }}
-                        {{ form.smarts(class="form-select") }}
-                        {% for error in form.smarts.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.smarts(class="form-select" + (" is-invalid" if form.smarts.errors else ""), required=true) }}
+                        {% if form.smarts.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.smarts.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         {{ form.spirit.label(class="form-label") }}
-                        {{ form.spirit(class="form-select") }}
-                        {% for error in form.spirit.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.spirit(class="form-select" + (" is-invalid" if form.spirit.errors else ""), required=true) }}
+                        {% if form.spirit.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.spirit.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="row g-3 mt-2">
                     <div class="col-md-4">
                         {{ form.strength.label(class="form-label") }}
-                        {{ form.strength(class="form-select") }}
-                        {% for error in form.strength.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.strength(class="form-select" + (" is-invalid" if form.strength.errors else ""), required=true) }}
+                        {% if form.strength.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.strength.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                     <div class="col-md-4">
                         {{ form.vigor.label(class="form-label") }}
-                        {{ form.vigor(class="form-select") }}
-                        {% for error in form.vigor.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.vigor(class="form-select" + (" is-invalid" if form.vigor.errors else ""), required=true) }}
+                        {% if form.vigor.errors %}
+                            <div class="invalid-feedback">
+                                {% for error in form.vigor.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -96,64 +150,79 @@
 
         <div class="card mb-4">
             <div class="card-header">
-                <h4>Character Details</h4>
+                <h4>Additional Details</h4>
             </div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
                         {{ form.hindrances.label(class="form-label") }}
                         {{ form.hindrances(class="form-control", rows=3) }}
-                        {% for error in form.hindrances.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.edges.label(class="form-label") }}
                         {{ form.edges(class="form-control", rows=3) }}
-                        {% for error in form.edges.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
                     </div>
                 </div>
                 <div class="row g-3 mt-2">
                     <div class="col-md-6">
                         {{ form.equipment.label(class="form-label") }}
                         {{ form.equipment(class="form-control", rows=3) }}
-                        {% for error in form.equipment.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form.background.label(class="form-label") }}
-                        {{ form.background(class="form-control", rows=3) }}
-                        {% for error in form.background.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                </div>
-                <div class="row g-3 mt-2">
-                    <div class="col-md-6">
-                        {{ form.notes.label(class="form-label") }}
-                        {{ form.notes(class="form-control", rows=3) }}
-                        {% for error in form.notes.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ form.money.label(class="form-label") }}
-                        {{ form.money(class="form-control", type="number") }}
-                        {% for error in form.money.errors %}
-                            <span class="text-danger">{{ error }}</span>
-                        {% endfor %}
+                        {{ form.money(class="form-control", type="number", value=0) }}
+                    </div>
+                </div>
+                <div class="row g-3 mt-2">
+                    <div class="col-12">
+                        {{ form.background.label(class="form-label") }}
+                        {{ form.background(class="form-control", rows=3) }}
+                    </div>
+                    <div class="col-12">
+                        {{ form.notes.label(class="form-label") }}
+                        {{ form.notes(class="form-control", rows=3) }}
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="mb-4">
-            {{ form.submit(class="btn btn-primary") }}
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end mb-4">
+            <button type="submit" class="btn btn-primary">Create Character</button>
             <a href="{{ url_for('character.list_characters') }}" class="btn btn-secondary">Cancel</a>
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.character-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            if (!isValid) {
+                e.preventDefault();
+                const firstInvalid = form.querySelector('.is-invalid');
+                if (firstInvalid) {
+                    firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstInvalid.focus();
+                }
+            }
+        });
+    }
+});
+</script>
 {% endblock %}
